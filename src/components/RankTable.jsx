@@ -11,9 +11,9 @@ function RankTable({ nominations, deleteNomination }) {
   return (
     <div className="billboard-container">
       <div className="billboard-header">
-        <h2 className="billboard-title">Top Songs Global</h2>
+        <h2 className="billboard-title">Last Cycle's Chart</h2>
         <div className="billboard-date">
-          Week of May 27, 2025
+          Cycle 1
         </div>
       </div>
 

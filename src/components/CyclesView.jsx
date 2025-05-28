@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import CreateForm from './CreateForm'
 import '../styles/CyclesView.css'
 
@@ -7,6 +8,7 @@ export default function CyclesView() {
   const [nameInput, setNameInput] = useState('')
   const [isActiveInput, setIsActiveInput] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const navigate = useNavigate()
 
   // Fetch all cycles
   useEffect(() => {
@@ -40,9 +42,16 @@ export default function CyclesView() {
     setCycles(cycles.filter(c => c.id !== id))
   }
 
+  // Navigate to cycle chart
+  const handleCycleClick = (cycleId) => {
+    navigate(`/cycles/${cycleId}`)
+  }
+
   return (
-    <div className="content">
-      <CreateForm
+    <div className="cycles-view">
+      <h1 className="section-title">Cycles</h1>
+      
+      {/* <CreateForm
         showCreateForm={showCreateForm}
         setShowCreateForm={setShowCreateForm}
         nameInput={nameInput}
@@ -50,19 +59,44 @@ export default function CyclesView() {
         isActiveInput={isActiveInput}
         setIsActiveInput={setIsActiveInput}
         createCycle={createCycle}
-      />
+      /> */}
       
-      {/* Your cycles list UI here */}
-      <div className="cycles-list">
+      <div className="cycles-grid">
         {cycles.map(cycle => (
-          <div key={cycle.id} className="cycle-item">
-            <span>{cycle.name} {cycle.isActive && '(Active)'}</span>
-            <button onClick={() => deleteCycle(cycle.id)}>Delete</button>
+          <div 
+            key={cycle.id} 
+            className={`cycle-card ${cycle.isActive ? 'active' : ''}`}
+            onClick={() => handleCycleClick(cycle.id)}
+          >
+            <div className="cycle-header">
+              <h2 className="cycle-title">{cycle.name}</h2>
+              {cycle.isActive && <span className="active-badge">ACTIVE</span>}
+            </div>
+            
+            <div className="cycle-content">
+              {/* Placeholder for album art - you can replace with actual image */}
+              <div className="album-art">
+                <div className="album-placeholder">♪</div>
+              </div>
+            </div>
+            
+            <div className="cycle-footer">
+              <div className="number-one-info">
+                <span className="position-badge">#1 THIS CYCLE</span>   
+                <div className="song-info">
+                  <div className="song-title">{cycle.topSong?.title || 'No data yet'}</div>
+                  <div className="artist-name">{cycle.topSong?.artist || ''}</div>
+                </div>
+              </div>
+            </div>
           </div>
         ))}
+        
+        <div className="add-cycle-card" onClick={() => setShowCreateForm(true)}>
+          <div className="add-icon">+</div>
+          <div className="add-text">Create New Cycle</div>
+        </div>
       </div>
-      
-      <button onClick={() => setShowCreateForm(true)}>Create New Cycle</button>
     </div>
   )
 }

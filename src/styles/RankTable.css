@@ -36,7 +36,7 @@
 
 .table-header-row {
   display: grid;
-  grid-template-columns: 80px 1fr 150px;
+  grid-template-columns: 100px 1fr 300px;
   gap: 1rem;
   align-items: center;
   font-weight: 600;
@@ -111,12 +111,10 @@
 
 .song-artist {
   font-size: 0.875rem;
-  color: #6c757d;
 }
 
 .col-artist {
   font-weight: 500;
-  color: #495057;
   text-align: left;
 }
 

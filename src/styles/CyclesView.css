@@ -1,15 +1,219 @@
 /* Cycles View Styles */
 .cycles-view {
   width: 100%;
+  padding: 2rem;
+  background: #f5f5f5;
+  min-height: 100vh;
 }
 
 .section-title {
-  font-size: 1.75rem;
-  font-weight: bold;
-  color: #212529;
-  margin-bottom: 1.5rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
+.cycles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.cycle-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.cycle-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.cycle-card.active {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+/* Different gradient colors for variety */
+.cycle-card:nth-child(2) { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+.cycle-card:nth-child(3) { background: linear-gradient(135deg, #10b981 0%, #047857 100%); }
+.cycle-card:nth-child(4) { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.cycle-card:nth-child(5) { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.cycle-card:nth-child(6) { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+
+.cycle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.cycle-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.active-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cycle-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.album-art {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.album-placeholder {
+  font-size: 2rem;
+  opacity: 0.8;
+}
+
+.cycle-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+}
+
+.number-one-info {
+  flex: 1;
+}
+
+.position-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.song-info {
+  margin-top: 0.5rem;
+}
+
+.song-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.artist-name {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  line-height: 1.2;
+}
+
+.delete-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 1rem;
+}
+
+.delete-btn:hover {
+  background: rgba(255, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+
+.add-cycle-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.add-cycle-card:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: #999;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.add-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  color: #999;
+}
+
+.add-text {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .cycles-view {
+    padding: 1rem;
+  }
+  
+  .cycles-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .section-title {
+    font-size: 2rem;
+  }
+  
+  .cycle-card {
+    min-height: 180px;
+  }
+}
+
+/* Legacy styles for backward compatibility */
 .cycles-list {
   display: flex;
   flex-direction: column;
@@ -71,19 +275,4 @@
 
 .btn-select:hover {
   background: #3367d6;
-}
-
-.btn-delete {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.btn-delete:hover {
-  background: #c82333;
 }
