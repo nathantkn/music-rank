@@ -1,0 +1,170 @@
+/* Billboard Table Styles */
+.billboard-container {
+  width: 100%;
+}
+
+.billboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.billboard-title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #212529;
+}
+
+.billboard-date {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.table-container {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.table-header {
+  background: #4285f4;
+  color: white;
+  padding: 1rem 1.5rem;
+}
+
+.table-header-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 150px;
+  gap: 1rem;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table-body {
+  background: white;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 150px;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background 0.2s ease;
+}
+
+.table-row:hover {
+  background: #f8f9fa;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.position-badge {
+  width: 40px;
+  height: 40px;
+  background: #212529;
+  color: white;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.col-song {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.album-art {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #8b5fbf, #b671d6);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.125rem;
+}
+
+.song-details {
+  flex: 1;
+}
+
+.song-title {
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+
+.song-artist {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.col-artist {
+  font-weight: 500;
+  color: #495057;
+  text-align: left;
+}
+
+.delete-button {
+  color: #dc3545;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.delete-button:hover {
+  color: #c82333;
+  background: #f8d7da;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .table-header-row,
+  .table-row {
+    grid-template-columns: 60px 1fr 120px;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .col-song {
+    gap: 0.5rem;
+  }
+  
+  .album-art {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .position-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
+}
