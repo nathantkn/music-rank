@@ -1,6 +1,6 @@
 import '../styles/RankTable.css'
 
-function RankTable({ nominations, deleteNomination }) {
+function RankTable({ nominations, cycleName = 'Current Cycle' }) {
   const sortedNominations = [...nominations].sort((a, b) => {
     if (!a.rank && !b.rank) return 0
     if (!a.rank) return 1
@@ -11,9 +11,9 @@ function RankTable({ nominations, deleteNomination }) {
   return (
     <div className="billboard-container">
       <div className="billboard-header">
-        <h2 className="billboard-title">Last Cycle's Chart</h2>
+        <h2 className="billboard-title">{cycleName} Chart</h2>
         <div className="billboard-date">
-          Cycle 1
+          {nominations.length} nominations
         </div>
       </div>
 

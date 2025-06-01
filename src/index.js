@@ -1,6 +1,11 @@
 import express from 'express'
 import db from './db.js'
-import { fetchSpotifyTrack, fetchYouTubeVideo, upsertTrack } from './services/trackService.js';
+import {
+  fetchSpotifyTrack,
+  fetchYouTubeVideo,
+  upsertTrack,
+  searchSpotifyTracks
+} from './services/trackService.js';
 
 const app = express();
 app.use(express.json());
@@ -44,10 +49,19 @@ app.put('/api/cycles/:id', async (req, res, next) => {
     const cycleId = parseInt(req.params.id, 10);
     const { name, isActive } = req.body;
 
+    // If setting this cycle to active, deactivate all others first
+    if (isActive) {
+      await db.cycle.updateMany({
+        where: { NOT: { id: cycleId } },
+        data: { isActive: false },
+      });
+    }
+
     const cycle = await db.cycle.update({
       where: { id: cycleId },
       data: { name, isActive },
     });
+    
     res.json(cycle);
   } catch (err) {
     next(err);
@@ -182,6 +196,18 @@ app.delete('/api/cycles/:id/best-new-artist', async (req, res, next) => {
     const cycleId = parseInt(req.params.id, 10);
     await db.bestNewArtist.delete({ where: { cycleId } });
     res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 12) Get search results
+app.get('/api/search', async (req, res, next) => {
+  const { q } = req.query;
+  if (!q) return res.status(400).json({ error: 'Query parameter "q" is required.' });
+  try {
+    const results = await searchSpotifyTracks(q);
+    res.json(results);
   } catch (err) {
     next(err);
   }

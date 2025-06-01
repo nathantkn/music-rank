@@ -34,10 +34,10 @@ export default function App() {
   }, [selectedCycle])
 
   // Delete a nomination
-  const deleteNomination = async (id) => {
-    await fetch(`/api/nominations/${id}`, { method: 'DELETE' })
-    setNominations(nominations.filter(n => n.id !== id))
-  }
+  // const deleteNomination = async (id) => {
+  //   await fetch(`/api/nominations/${id}`, { method: 'DELETE' })
+  //   setNominations(nominations.filter(n => n.id !== id))
+  // }
 
   const activeCycle = cycles.find(c => c.isActive) || selectedCycle
 
@@ -46,7 +46,7 @@ export default function App() {
       {activeCycle && (
         <RankTable 
           nominations={nominations}
-          deleteNomination={deleteNomination}
+          // deleteNomination={deleteNomination}
         />
       )}
     </div>

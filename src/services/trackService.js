@@ -1,6 +1,29 @@
 import db from '../db.js';
-
 import { getSpotifyAccessToken } from './spotifyAuth.js';
+
+// 1) Search Spotify tracks by query
+export async function searchSpotifyTracks(query) {
+    const token = await getSpotifyAccessToken();
+    const res = await fetch(
+        `https://api.spotify.com/v1/search?type=track&limit=5&q=${encodeURIComponent(query)}`,
+        {
+            headers: { Authorization: `Bearer ${token}` }
+        }
+    );
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Spotify search API error ${res.status}: ${err}`);
+    }
+    const data = await res.json();
+    return data.tracks.items.map(item => ({
+        id:        item.id,
+        spotifyId: item.id,
+        title:     item.name,
+        artist:    item.artists[0]?.name ?? '',
+        album:     item.album?.name ?? '',
+        image:     item.album?.images?.[0]?.url ?? ''
+    }));
+}
 
 // 1) Fetch a Spotify track
 export async function fetchSpotifyTrack(spotifyTrackId) {
