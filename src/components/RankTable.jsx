@@ -8,6 +8,26 @@ function RankTable({ nominations, cycleName = 'Current Cycle' }) {
     return a.rank - b.rank
   })
 
+  // Helper function to get all artists from artistLinks
+  const getArtistsString = (track) => {
+    if (track?.artistLinks && track.artistLinks.length > 0) {
+      return track.artistLinks.map(link => link.artist.name).join(', ')
+    }
+    return track?.artist || 'Unknown Artist'
+  }
+
+  // Helper function to get album cover image
+  const getAlbumImage = (track) => {
+    if (track?.album?.imageUrl) {
+      return track.album.imageUrl
+    }
+    // Fallback to track image if available
+    if (track?.imageUrl) {
+      return track.imageUrl
+    }
+    return null
+  }
+
   return (
     <div className="billboard-container">
       <div className="billboard-header">
@@ -29,30 +49,39 @@ function RankTable({ nominations, cycleName = 'Current Cycle' }) {
         <div className="table-body">
           {sortedNominations.length > 0 ? (
             sortedNominations.map((nomination, index) => (
-              <div key={nomination.id} className="table-row">
-                <div className="col-position">
-                  <div className="position-badge">
-                    {nomination.rank || (index + 1)}
-                  </div>
-                </div>
-                
-                <div className="col-song">
-                  <div className="album-art">🎵</div>
-                  <div className="song-details">
-                    <div className="song-title">
-                      {nomination.track?.title || nomination.trackId}
-                    </div>
-                    <div className="song-artist">
-                      {nomination.track?.artist || 'Unknown Artist'}
+                <div key={nomination.id} className="table-row">
+                  <div className="col-position">
+                    <div className="position-badge">
+                      {nomination.rank || (index + 1)}
                     </div>
                   </div>
+                  
+                  <div className="col-song">
+                    <div className="album-art">
+                      <img 
+                        src={getAlbumImage(nomination.track)} 
+                        alt={`${nomination.track?.title || 'Unknown'} album cover`}
+                        className="album-cover-image"
+                      />
+                    </div>
+                    <div className="song-details">
+                      <div className="song-title">
+                        {nomination.track?.title || nomination.trackId}
+                      </div>
+                      {nomination.track?.album?.title && (
+                        <div className="song-album">
+                          {nomination.track.album.title}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="col-artist">
+                    {getArtistsString(nomination.track)}
+                  </div>
                 </div>
-                
-                <div className="col-artist">
-                  {nomination.track?.artist || 'Unknown Artist'}
-                </div>
-              </div>
-            ))
+              )
+            )
           ) : (
             <div className="empty-state">
               No nominations yet. Add some tracks to get started!

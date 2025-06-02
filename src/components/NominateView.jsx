@@ -27,6 +27,8 @@ export default function NominateView() {
   // Search for songs (Spotify API)
   const searchSongs = async () => {
     if (!searchQuery.trim()) return
+
+    setSearchResults([])
     setIsSearching(true)
     try {
       // Call your backend proxy or Spotify directly
@@ -35,14 +37,15 @@ export default function NominateView() {
       )
       if (!response.ok) throw new Error(`Search error ${response.status}`)
       const data = await response.json()
-      // console.log('Search results:', data)
+
       const results = data.map(item => ({
-        id:        item.id,         // keep the unique id
-        name:      item.title,      // use `item.title` instead of `item.name`
-        artist:    item.artist,     // `item.artist` is already a string
-        album:     item.album,      // `item.album` is already a string
-        image:     item.image,      // take the URL string directly
-        spotifyId: item.spotifyId   // or `item.id`, whichever matches your nomination payload
+        id:        item.id,
+        name:      item.title,
+        artist:    item.artists || 'Unknown Artist',
+        album:     item.album,
+        image:     item.image,
+        spotifyId: item.spotifyId,
+        artistIds: item.artistIds || [],
       }));
       setSearchResults(results)
     } catch (error) {
@@ -121,22 +124,36 @@ export default function NominateView() {
             {isSearching ? '...' : 'Search'}
           </button>
         </div>
-        
-        {searchResults.length > 0 && (
+
+        {isSearching ? (
+          <div className="search-results">
+            <h3 className="results-title">Searching...</h3>
+            <div className="loading">
+              <div className="loading-spinner"></div>
+              <span>Searching for songs...</span>
+            </div>
+          </div>
+        ) : searchResults.length > 0 ? (
           <div className="search-results">
             <h3 className="results-title">Search Results</h3>
             <div className="results-list">
               {searchResults.map(track => (
                 <div key={track.id} className="result-item">
-                  <img 
-                    src={track.image} 
-                    alt={`${track.name} cover`}
-                    className="result-image"
-                  />
+                  <div className="result-image-container">
+                    {track.image ? (
+                      <img 
+                        src={track.image} 
+                        alt={`${track.name} cover`}
+                        className="result-image"
+                      />
+                    ) : null}
+                  </div>
                   <div className="result-info">
                     <div className="result-name">{track.name}</div>
                     <div className="result-artist">{track.artist}</div>
-                    <div className="result-album">{track.album}</div>
+                    {track.album && (
+                      <div className="result-album">{track.album}</div>
+                    )}
                   </div>
                   <button 
                     className="nominate-button"
@@ -149,14 +166,7 @@ export default function NominateView() {
               ))}
             </div>
           </div>
-        )}
-        
-        {isSearching && (
-          <div className="loading">
-            <div className="loading-spinner"></div>
-            <span>Searching for songs...</span>
-          </div>
-        )}
+        ) : null}
       </div>
       
       <div className="bottom-section">

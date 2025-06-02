@@ -5,7 +5,7 @@ import { getSpotifyAccessToken } from './spotifyAuth.js';
 export async function searchSpotifyTracks(query) {
     const token = await getSpotifyAccessToken();
     const res = await fetch(
-        `https://api.spotify.com/v1/search?type=track&limit=5&q=${encodeURIComponent(query)}`,
+        `https://api.spotify.com/v1/search?type=track&limit=20&q=${encodeURIComponent(query)}`,
         {
             headers: { Authorization: `Bearer ${token}` }
         }
@@ -19,7 +19,8 @@ export async function searchSpotifyTracks(query) {
         id:        item.id,
         spotifyId: item.id,
         title:     item.name,
-        artist:    item.artists[0]?.name ?? '',
+        artists:   item.artists.map(a => a.name).join(', '),
+        artistIds: item.artists.map(a => a.id),
         album:     item.album?.name ?? '',
         image:     item.album?.images?.[0]?.url ?? ''
     }));
@@ -40,6 +41,8 @@ export async function fetchSpotifyTrack(spotifyTrackId) {
     if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
     const data = await res.json();
 
+    const imageUrl = data.album.images?.[0]?.url ?? null;
+
     return {
         id:         data.id,
         title:      data.name,
@@ -47,11 +50,9 @@ export async function fetchSpotifyTrack(spotifyTrackId) {
         album: {
             id:          data.album.id,
             title:       data.album.name,
+            imageUrl
         },
-        artist: {
-            id:   data.artists[0].id,
-            name: data.artists[0].name
-        }
+        artists: data.artists.map(a => ({ id: a.id, name: a.name }))
     };
 }
 
@@ -88,30 +89,57 @@ export async function upsertTrack({ spotifyId, youtubeId, fetched }) {
     if (fetched.album) {
         album = await db.album.upsert({
             where:   { spotifyAlbumId: fetched.album.id },
-            create:  { spotifyAlbumId: fetched.album.id, title: fetched.album.title},
-            update:  { title: fetched.album.title }
+            create: {
+                spotifyAlbumId: fetched.album.id,
+                title:           fetched.album.title,
+                imageUrl:        fetched.album.imageUrl
+            },
+            update: {
+                title:       fetched.album.title,
+                imageUrl:    fetched.album.imageUrl
+            }
         });
     }
 
     // 3) Track
-    const where = spotifyId
+    const trackWhere = spotifyId
         ? { spotifyTrackId: spotifyId }
         : { youtubeVideoId: youtubeId };
 
-    const data = {
+    const trackData = {
         title:      fetched.title,
         durationMs: fetched.durationMs ?? null,
-        artistId:   artist?.id ?? null,
-        albumId:    album?.id  ?? null,
-        youtubeVideoId: youtubeId ?? null
+        albumId:    album?.id ?? null,
+        youtubeVideoId: youtubeId ?? null,
+        spotifyTrackId: spotifyId ?? undefined
     };
 
-    return db.track.upsert({
-        where,
-        create: {
-            ...data,
-            spotifyTrackId: spotifyId ?? undefined
-        },
-        update: data
+    const track = await db.track.upsert({
+        where:  trackWhere,
+        create: trackData,
+        update: trackData
     });
+
+    for (const art of fetched.artists) {
+        // upsert each artist
+        const artist = await db.artist.upsert({
+            where:   { spotifyArtistId: art.id },
+            create:  { spotifyArtistId: art.id, name: art.name },
+            update:  { name: art.name }
+        });
+
+        // upsert into the join table:
+        await db.trackToArtist.upsert({
+            where: {
+                trackId_artistId: { trackId: track.id, artistId: artist.id }
+            },
+            create: {
+                track:   { connect: { id: track.id } },
+                artist:  { connect: { id: artist.id } }
+            },
+            update: {}
+        });
+    }
+
+    return track;
 }

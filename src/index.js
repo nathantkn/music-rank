@@ -86,7 +86,14 @@ app.get('/api/cycles/:id/nominations', async (req, res, next) => {
     const nominations = await db.nomination.findMany({
       where: { cycleId },
       orderBy: { rank: 'asc' },
-      include: { track: true },
+      include: {
+        track: {
+          include: {
+            artistLinks: { include: { artist: true } },
+            album: true
+          }
+        }
+      }
     });
     res.json(nominations);
   } catch (err) {
