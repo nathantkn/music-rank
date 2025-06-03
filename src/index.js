@@ -159,15 +159,15 @@ app.delete('/api/nominations/:id', async (req, res, next) => {
 app.get('/api/cycles/:id/best-new-artist', async (req, res) => {
   const cycleId = parseInt(req.params.id, 10);
   try {
-    const pick = await db.bestNewArtist.findOne({
+    const pick = await db.bestNewArtist.findUnique({
       where: { cycleId },
     });
 
-    if (pick.length === 0) {
+    if (!pick) {
       return res.status(404).json({ error: 'No artist chosen for this cycle yet.' });
     }
 
-    res.status(201).json(pick);
+    res.status(200).json(pick);
   } catch (err) {
     res.status(500).json({ error: 'Something went wrong.' });
   }

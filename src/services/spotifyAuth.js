@@ -30,7 +30,9 @@ export async function getSpotifyAccessToken() {
     if (!resp.ok) {
         throw new Error(`Token request failed: ${resp.status}`);
     }
+    
     const { access_token, expires_in } = await resp.json();
+    spotifyToken = access_token;
     spotifyTokenExpiresAt = dayjs().add(expires_in - 60, 'second');
-    return access_token;
+    return spotifyToken;
 }

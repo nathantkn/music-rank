@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Cycle {
+  id              Int             @id @default(autoincrement())
+  name            String
+  isActive        Boolean         @default(false)
+  nominations     Nomination[]
+  bestNewArtist   BestNewArtist?
+  statsSnapshot   StatsSnapshot?
+}
+
+model Artist {
+  id                      Int              @id @default(autoincrement())
+  spotifyArtistId         String           @unique
+  name                    String
+  trackLinks              TrackToArtist[]
+  bestNewArtistAwards     BestNewArtist[]
+  artistOfCycles          StatsSnapshot[]  @relation("ArtistOfCycle") 
+  mostNominatedAppearances StatsSnapshot[] @relation("MostNominatedArtist")
+}
+
+model Album {
+  id               Int        @id @default(autoincrement())
+  spotifyAlbumId   String     @unique
+  title            String
+  imageUrl         String?
+  tracks           Track[]
+}
+
+model Track {
+  id                Int             @id @default(autoincrement())
+  spotifyTrackId    String          @unique
+  youtubeVideoId    String?
+  title             String
+  durationMs        Int?
+  artistLinks       TrackToArtist[]
+  album             Album?          @relation(fields: [albumId], references: [id])
+  albumId           Int?
+  nominations       Nomination[]
+  statsTrackOf      StatsSnapshot?  @relation("TrackOfCycle")
+}
+
+model TrackToArtist {
+  track     Track   @relation(fields: [trackId], references: [id])
+  trackId   Int
+  artist    Artist  @relation(fields: [artistId], references: [id])
+  artistId  Int
+
+  @@id([trackId, artistId])
+}
+
+model Nomination {
+  id        Int     @id @default(autoincrement())
+  cycle     Cycle   @relation(fields: [cycleId], references: [id])
+  cycleId   Int
+  track     Track   @relation(fields: [trackId], references: [id])
+  trackId   Int
+  rank      Int?    
+
+  @@unique([cycleId, trackId])
+}
+
+model BestNewArtist {
+  cycle       Cycle  @relation(fields: [cycleId], references: [id])
+  cycleId     Int    @id
+  artist      Artist @relation(fields: [artistId], references: [id])
+  artistId    Int
+}
+
+model StatsSnapshot {
+  cycle                 Cycle    @relation(fields: [cycleId], references: [id])
+  cycleId               Int      @id
+  trackOfCycle          Track?   @relation("TrackOfCycle", fields: [trackOfCycleId], references: [id])
+  trackOfCycleId        Int?     @unique
+  artistOfCycle         Artist?  @relation("ArtistOfCycle", fields: [artistOfCycleId], references: [id])
+  artistOfCycleId       Int?
+  mostNominatedArtist   Artist?  @relation("MostNominatedArtist", fields: [mostNominatedArtistId], references: [id])
+  mostNominatedArtistId Int?
+  longestSongMs         Int?
+  computedAt            DateTime @default(now())
+}

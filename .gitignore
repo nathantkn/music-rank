@@ -23,6 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
-/prisma
+/prisma/*
+!prisma/schema.prisma
+!prisma/migrations/
+prisma/*.db
+
 .env
-/src/scripts
+
+/src/scripts/client_secret.json
+/src/scripts/quickstart.js
