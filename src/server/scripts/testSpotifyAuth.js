@@ -11,7 +11,7 @@ test('caches Spotify token between calls', async (t) => {
         return { ok: true, json: async () => ({ access_token: 'token123', expires_in: 3600 }) };
     });
 
-    const { getSpotifyAccessToken } = await import('../src/services/spotifyAuth.js');
+    const { getSpotifyAccessToken } = await import('../services/spotifyAuth.js');
 
     const first = await getSpotifyAccessToken();
     const second = await getSpotifyAccessToken();
