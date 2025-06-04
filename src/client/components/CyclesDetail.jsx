@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import RankTable from './RankTable'
 import '../styles/CyclesDetail.css'
+import CycleStats from './CycleStats'
 
 export default function CyclesDetail() {
     const navigate = useNavigate()
@@ -114,6 +115,10 @@ export default function CyclesDetail() {
                 </div>
             </div>
 
+
+
+            
+
             {!nominations || nominations.length === 0 ? (
                 <div className="empty-state">
                     No nominations for this cycle yet. 
@@ -122,7 +127,10 @@ export default function CyclesDetail() {
                     )}
                 </div>
             ) : (
-                <RankTable nominations={nominations} cycleName={selectedCycle.name} />
+                <>
+                    <CycleStats cycleId={selectedCycle.id} isActive={selectedCycle.isActive} />
+                    <RankTable nominations={nominations} cycleName={selectedCycle.name} />
+                </>
             )}
         </div>
     )

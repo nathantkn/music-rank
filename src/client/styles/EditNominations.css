@@ -74,6 +74,65 @@
   cursor: not-allowed;
 }
 
+/* Best New Artist Section */
+.best-new-artist-section {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.best-new-artist-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.best-new-artist-section h3::before {
+  content: "🌟";
+  font-size: 1.1em;
+}
+
+.best-new-artist-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.artist-select {
+  flex: 1;
+  max-width: 400px;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #333;
+}
+
+.artist-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.artist-select:hover {
+  border-color: #667eea;
+}
+
+.artist-select option {
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
 .nominations-list {
   display: flex;
   flex-direction: column;
@@ -232,6 +291,19 @@
   
   .confirm-btn, .cancel-btn {
     flex: 1;
+  }
+
+  .best-new-artist-section {
+    padding: 1rem;
+  }
+  
+  .best-new-artist-dropdown {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .artist-select {
+    max-width: none;
   }
   
   .nomination-item {

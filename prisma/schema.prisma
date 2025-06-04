@@ -18,7 +18,6 @@ model Cycle {
   name            String
   isActive        Boolean         @default(false)
   nominations     Nomination[]
-  bestNewArtist   BestNewArtist?
   statsSnapshot   StatsSnapshot?
 }
 
@@ -27,9 +26,8 @@ model Artist {
   spotifyArtistId         String           @unique
   name                    String
   trackLinks              TrackToArtist[]
-  bestNewArtistAwards     BestNewArtist[]
-  artistOfCycles          StatsSnapshot[]  @relation("ArtistOfCycle") 
-  mostNominatedAppearances StatsSnapshot[] @relation("MostNominatedArtist")
+  artistOfCycle           StatsSnapshot[]  @relation("ArtistOfCycle") 
+  BestNewArtist           StatsSnapshot[]  @relation("BestNewArtist")
 }
 
 model Album {
@@ -73,22 +71,18 @@ model Nomination {
   @@unique([cycleId, trackId])
 }
 
-model BestNewArtist {
-  cycle       Cycle  @relation(fields: [cycleId], references: [id])
-  cycleId     Int    @id
-  artist      Artist @relation(fields: [artistId], references: [id])
-  artistId    Int
-}
-
 model StatsSnapshot {
-  cycle                 Cycle    @relation(fields: [cycleId], references: [id])
-  cycleId               Int      @id
-  trackOfCycle          Track?   @relation("TrackOfCycle", fields: [trackOfCycleId], references: [id])
-  trackOfCycleId        Int?     @unique
-  artistOfCycle         Artist?  @relation("ArtistOfCycle", fields: [artistOfCycleId], references: [id])
-  artistOfCycleId       Int?
-  mostNominatedArtist   Artist?  @relation("MostNominatedArtist", fields: [mostNominatedArtistId], references: [id])
-  mostNominatedArtistId Int?
-  longestSongMs         Int?
-  computedAt            DateTime @default(now())
+  cycle                 Cycle     @relation(fields: [cycleId], references: [id])
+  cycleId               Int       @id
+
+  trackOfCycle         Track?     @relation("TrackOfCycle", fields: [trackOfCycleId], references: [id]) 
+  trackOfCycleId       Int?       @unique
+
+  artistOfCycle        Artist?    @relation("ArtistOfCycle", fields: [artistOfCycleId], references: [id])
+  artistOfCycleId      Int?
+
+  bestNewArtist        Artist?    @relation("BestNewArtist", fields: [bestNewArtistId], references: [id])
+  bestNewArtistId      Int?
+
+  computedAt           DateTime   @default(now())
 }

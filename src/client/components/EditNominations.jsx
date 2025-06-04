@@ -12,6 +12,10 @@ export default function EditNominations() {
     const [draggedItem, setDraggedItem] = useState(null)
     const [dragOverIndex, setDragOverIndex] = useState(null)
 
+    // Best New Artist selection state
+    const [allArtists, setAllArtists] = useState([])
+    const [selectedBestNewArtist, setSelectedBestNewArtist] = useState(null)
+
     // Fetch cycle and nominations data
     useEffect(() => {
         if (!cycleId) return
@@ -37,6 +41,27 @@ export default function EditNominations() {
                 }))
 
                 setNominations(nominationsWithRanks)
+
+                // Extract all unique artists from nominations
+                const artistsSet = new Set()
+                nominationsData.forEach(nomination => {
+                    if (nomination.track?.artistLinks) {
+                        nomination.track.artistLinks.forEach(artistLink => {
+                            if (artistLink.artist) {
+                                artistsSet.add(JSON.stringify({
+                                    id: artistLink.artist.id,
+                                    name: artistLink.artist.name
+                                }))
+                            }
+                        })
+                    }
+                })
+
+                const uniqueArtists = Array.from(artistsSet)
+                    .map(artistStr => JSON.parse(artistStr))
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                
+                setAllArtists(uniqueArtists)
                 
             } catch (err) {
                 console.error('Failed to fetch data:', err)
@@ -112,6 +137,19 @@ export default function EditNominations() {
             )
             
             await Promise.all(updatePromises)
+
+            // Update stats with best new artist selection
+            const statsResponse = await fetch(`/api/cycles/${cycleId}/stats`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    bestNewArtistId: selectedBestNewArtist ? parseInt(selectedBestNewArtist, 10) : null 
+                })
+            })
+
+            if (!statsResponse.ok) {
+                throw new Error('Failed to update stats')
+            }
             
             // Navigate back to cycle detail
             navigate(`/cycles/${cycleId}`)
@@ -150,6 +188,32 @@ export default function EditNominations() {
                     }))
                 
                 setNominations(updatedNominations)
+
+                // Update artists list after deletion
+                const artistsSet = new Set()
+                updatedNominations.forEach(nomination => {
+                    if (nomination.track?.artistLinks) {
+                        nomination.track.artistLinks.forEach(artistLink => {
+                            if (artistLink.artist) {
+                                artistsSet.add(JSON.stringify({
+                                    id: artistLink.artist.id,
+                                    name: artistLink.artist.name
+                                }))
+                            }
+                        })
+                    }
+                })
+
+                const uniqueArtists = Array.from(artistsSet)
+                    .map(artistStr => JSON.parse(artistStr))
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                
+                setAllArtists(uniqueArtists)
+
+                // Clear best new artist selection if the artist is no longer available
+                if (selectedBestNewArtist && !uniqueArtists.find(artist => artist.id.toString() === selectedBestNewArtist)) {
+                    setSelectedBestNewArtist(null)
+                }
             } else {
                 console.error('Failed to delete nomination')
                 alert('Failed to delete nomination. Please try again.')
@@ -206,6 +270,25 @@ export default function EditNominations() {
                     >
                         Cancel
                     </button>
+                </div>
+            </div>
+
+            {/* Best New Artist Selection */}
+            <div className="best-new-artist-section">
+                <h3>Best New Artist</h3>
+                <div className="best-new-artist-dropdown">
+                    <select 
+                        value={selectedBestNewArtist || ''}
+                        onChange={(e) => setSelectedBestNewArtist(e.target.value || null)}
+                        className="artist-select"
+                    >
+                        <option value=""></option>
+                        {allArtists.map(artist => (
+                            <option key={artist.id} value={artist.id}>
+                                {artist.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
 

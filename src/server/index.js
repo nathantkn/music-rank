@@ -1,16 +1,19 @@
 import express from 'express'
-import db from './db.js'
+import { PrismaClient } from '@prisma/client';
 import {
   fetchSpotifyTrack,
   fetchYouTubeVideo,
   upsertTrack,
   searchSpotifyTracks
 } from './services/trackService.js';
+import { recomputeStatsForCycle } from './services/statsService.js';
 
 const app = express();
 app.use(express.json());
+const db = new PrismaClient();
 
-// 1) List all cycles
+// 1) CYCLES
+// a) Get all cycles
 app.get('/api/cycles', async (req, res, next) => {
   try {
     const cycles = await db.cycle.findMany();
@@ -20,7 +23,7 @@ app.get('/api/cycles', async (req, res, next) => {
   }
 });
 
-// 2) Create a new cycle
+// b) Create a new cycle
 app.post('/api/cycles', async (req, res, next) => {
   try {
     const { name, isActive = false } = req.body;
@@ -43,7 +46,7 @@ app.post('/api/cycles', async (req, res, next) => {
   }
 });
 
-// 3) Update a cycle
+// c) Update a cycle
 app.put('/api/cycles/:id', async (req, res, next) => {
   try {
     const cycleId = parseInt(req.params.id, 10);
@@ -68,7 +71,7 @@ app.put('/api/cycles/:id', async (req, res, next) => {
   }
 });
 
-// 4) Delete a cycle
+// d) Delete a cycle
 app.delete('/api/cycles/:id', async (req, res, next) => {
   try {
     const cycleId = parseInt(req.params.id, 10);
@@ -79,7 +82,8 @@ app.delete('/api/cycles/:id', async (req, res, next) => {
   }
 });
 
-// 5) Get nominations for a single cycle
+// 2) NOMINATIONS
+// a) Get all nominations
 app.get('/api/cycles/:id/nominations', async (req, res, next) => {
   try {
     const cycleId = parseInt(req.params.id, 10);
@@ -101,7 +105,7 @@ app.get('/api/cycles/:id/nominations', async (req, res, next) => {
   }
 });
 
-// 6) Create a new nomination
+// b) Create a new nomination
 app.post('/api/nominations', async (req, res, next) => {
   try {
     const { cycleId, spotifyTrackId, youtubeVideoId, rank = null } = req.body;
@@ -129,7 +133,7 @@ app.post('/api/nominations', async (req, res, next) => {
   }
 });
 
-// 7) Update a nomination
+// c) Update a nomination
 app.put('/api/nominations/:id', async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -144,7 +148,7 @@ app.put('/api/nominations/:id', async (req, res, next) => {
   }
 });
 
-// 8) Delete a nomination
+// d) Delete a nomination
 app.delete('/api/nominations/:id', async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -155,60 +159,9 @@ app.delete('/api/nominations/:id', async (req, res, next) => {
   }
 });
 
-// 9) Get current cycle pick of Best New Artist
-app.get('/api/cycles/:id/best-new-artist', async (req, res) => {
-  const cycleId = parseInt(req.params.id, 10);
-  try {
-    const pick = await db.bestNewArtist.findUnique({
-      where: { cycleId },
-    });
 
-    if (!pick) {
-      return res.status(404).json({ error: 'No artist chosen for this cycle yet.' });
-    }
-
-    res.status(200).json(pick);
-  } catch (err) {
-    res.status(500).json({ error: 'Something went wrong.' });
-  }
-});
-
-// 10) Create new Best New Artist pick
-app.post('/api/cycles/:id/best-new-artist', async (req, res, next) => {
-  try {
-    const { artistId } = req.body;
-    if (!artistId) {
-      return res.status(400).json({ error: 'Artist ID is required.' });
-    }
-
-    const cycleId = parseInt(req.params.id, 10);
-    const cycle = await db.cycle.findUnique({ where: { id: cycleId } });
-    if (!cycle) {
-      return res.status(404).json({ error: 'Cycle not found.' });
-    }
-
-    const bestNewArtist = await db.bestNewArtist.create({
-      data: { cycleId, artistId }
-    });
-
-    res.status(201).json(bestNewArtist);
-  } catch (err) {
-    next(err);
-  }
-});
-
-// 11) Delete Best New Artist pick
-app.delete('/api/cycles/:id/best-new-artist', async (req, res, next) => {
-  try {
-    const cycleId = parseInt(req.params.id, 10);
-    await db.bestNewArtist.delete({ where: { cycleId } });
-    res.status(204).end();
-  } catch (err) {
-    next(err);
-  }
-});
-
-// 12) Get search results
+// 3) SEARCH
+// a) Get search results
 app.get('/api/search', async (req, res, next) => {
   const { q } = req.query;
   if (!q) return res.status(400).json({ error: 'Query parameter "q" is required.' });
@@ -220,11 +173,87 @@ app.get('/api/search', async (req, res, next) => {
   }
 });
 
-// 12) Get stored stats
-// 13) Update stored stats
+// 4) STATS
+
+/**
+ * a) Recomputes all stats for this cycle and upserts them.
+ * Body: { bestNewArtistId: <artistId | null> }
+ */
+app.post('/api/cycles/:id/stats', async (req, res, next) => {
+  try {
+    const cycleId = Number(req.params.id);
+    const { bestNewArtistId = null } = req.body;
+
+    // Ensure cycle exists
+    const cycle = await db.cycle.findUnique({ where: { id: cycleId } });
+    if (!cycle) {
+      return res.status(404).json({ error: 'Cycle not found.' });
+    }
+
+    // Recompute & upsert
+    const stats = await recomputeStatsForCycle(cycleId, bestNewArtistId);
+    res.json({ message: 'Stats updated.', stats });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// b) Get stats for a cycle
+app.get('/api/cycles/:id/stats', async (req, res, next) => {
+  const cycleId = Number(req.params.id);
+  try {
+    const snapshot = await db.statsSnapshot.findUnique({
+      where: { cycleId },
+      include: {
+        trackOfCycle: {
+          include: {
+            // include cover art and all linked artists
+            album:       true,
+            artistLinks:  { include: { artist: true } }
+          }
+        },
+        artistOfCycle:       true,   // name & id
+        bestNewArtist:       true    // name & id
+      }
+    });
+
+    if (!snapshot) {
+      return res.status(404).json({ error: 'Stats not found. Have you computed them yet?' });
+    }
+
+    // Shape the response:
+    res.json({
+      cycleId:          snapshot.cycleId,
+      trackOfCycle: snapshot.trackOfCycle
+        ? {
+            id:         snapshot.trackOfCycle.id,
+            title:      snapshot.trackOfCycle.title,
+            durationMs: snapshot.trackOfCycle.durationMs,
+            artists:    snapshot.trackOfCycle.artistLinks.map(l => l.artist.name).join(', '),
+            album: {
+              title:    snapshot.trackOfCycle.album?.title ?? null,
+              imageUrl: snapshot.trackOfCycle.album?.imageUrl ?? null
+            }
+          }
+        : null,
+
+      artistOfCycle: snapshot.artistOfCycle
+        ? { id: snapshot.artistOfCycle.id, name: snapshot.artistOfCycle.name }
+        : null,
+
+      bestNewArtist: snapshot.bestNewArtist
+        ? { id: snapshot.bestNewArtist.id, name: snapshot.bestNewArtist.name }
+        : null,
+
+      computedAt:    snapshot.computedAt
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Global error handler
-app.use((err, req, res, next) => {
+app.use((err, req, res, next) => { 
   console.error(err);
   res.status(500).json({ error: err.message });
 });
