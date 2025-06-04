@@ -1,12 +1,36 @@
-# React + Vite
+# Music Rank
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a small full stack application using React for the client and Express for the API.  Vite is used for the development server and build tooling.
 
-Currently, two official plugins are available:
+## Project layout
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```
+src/
+  client/    # React application
+    components/
+    styles/
+    main.jsx
+    App.jsx
 
-## Expanding the ESLint configuration
+  server/    # Express API and Prisma usage
+    services/
+    scripts/
+    db.js
+    index.js
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+prisma/      # Prisma schema and migrations (database files ignored)
+```
+
+Run the development server with:
+
+```
+npm run dev
+```
+
+and start the API with:
+
+```
+node src/server/index.js
+```
+
+The client is served by Vite and proxies API requests to the Express server running on port `4000`.

@@ -30,5 +30,5 @@ prisma/*.db
 
 .env
 
-/src/scripts/client_secret.json
-/src/scripts/quickstart.js
+/src/server/scripts/client_secret.json
+/src/server/scripts/quickstart.js
