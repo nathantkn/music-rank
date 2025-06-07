@@ -32,19 +32,25 @@ export async function fetchSpotifyTrack(spotifyTrackId) {
     };
 }
 
-// 2) Fetch a YouTube video’s metadata
-export async function fetchYouTubeVideo(videoId) {
-    const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${YOUTUBE_API_KEY}`);
-    if (!res.ok) throw new Error(`YouTube API error: ${res.status}`);
-    const { items } = await res.json();
-    if (!items.length) throw new Error('YouTube video not found');
+// 2) Fetch artist details from Spotify
+export async function fetchSpotifyArtistDetails(spotifyArtistId) {
+    const token = await getSpotifyAccessToken();
 
-    const item = items[0];
+    const res = await fetch(
+        `https://api.spotify.com/v1/artists/${spotifyArtistId}`,
+        {
+            headers: { Authorization: `Bearer ${token}` }
+        }
+    );
+
+    if (!res.ok) {
+        throw new Error(`Spotify Artist API error ${res.status}`);
+    }
+
+    const data = await res.json();
     return {
-        id:        item.id,
-        title:     item.snippet.title,
-        thumbnail: item.snippet.thumbnails.default.url,
-        duration:  item.contentDetails.duration  // ISO8601 string, e.g. "PT3M15S"
+        name: data.name,
+        imageUrl: data.images?.[0]?.url ?? null
     };
 }
 
@@ -98,10 +104,25 @@ export async function upsertTrack({ spotifyId, youtubeId, fetched }) {
 
     for (const art of fetched.artists) {
         // upsert each artist
+        const existing = await db.artist.findUnique({
+            where: { spotifyArtistId: art.id }
+        });
+
+        let imageUrl = existing?.imageUrl;
+
+        if (!imageUrl) {
+            try {
+                const details = await fetchSpotifyArtistDetails(art.id);
+                imageUrl = details.imageUrl;
+            } catch (e) {
+                console.warn('Could not fetch Spotify artist image:', e);
+            }
+        }
+
         const artist = await db.artist.upsert({
             where:   { spotifyArtistId: art.id },
-            create:  { spotifyArtistId: art.id, name: art.name },
-            update:  { name: art.name }
+            create:  { spotifyArtistId: art.id, name: art.name, imageUrl },
+            update:  { name: art.name, imageUrl }
         });
 
         // upsert into the join table:
@@ -143,4 +164,20 @@ export async function searchSpotifyTracks(query) {
         album:     item.album?.name ?? '',
         image:     item.album?.images?.[0]?.url ?? ''
     }));
+}
+
+// 2) Fetch a YouTube video’s metadata
+export async function fetchYouTubeVideo(videoId) {
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${YOUTUBE_API_KEY}`);
+    if (!res.ok) throw new Error(`YouTube API error: ${res.status}`);
+    const { items } = await res.json();
+    if (!items.length) throw new Error('YouTube video not found');
+
+    const item = items[0];
+    return {
+        id:        item.id,
+        title:     item.snippet.title,
+        thumbnail: item.snippet.thumbnails.default.url,
+        duration:  item.contentDetails.duration  // ISO8601 string, e.g. "PT3M15S"
+    };
 }

@@ -67,7 +67,7 @@
   gap: 1rem;
 }
 
-.track-artwork {
+.track-artwork, .artist-photo {
   width: 80px;
   height: 80px;
   border-radius: 8px;
@@ -75,7 +75,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.track-info {
+.track-info, .artist-info {
   flex: 1;
 }
 
@@ -103,6 +103,11 @@
   font-size: 1.2rem;
   font-weight: bold;
   color: #333;
+  text-align: center;
+  width: 100%;
+}
+
+.artist-info .artist-name {
   text-align: center;
   width: 100%;
 }
@@ -189,7 +194,7 @@
     padding: 1rem;
   }
   
-  .track-artwork {
+  .track-artwork, .artist-photo {
     width: 60px;
     height: 60px;
   }

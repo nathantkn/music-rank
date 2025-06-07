@@ -212,8 +212,8 @@ app.get('/api/cycles/:id/stats', async (req, res, next) => {
             artistLinks:  { include: { artist: true } }
           }
         },
-        artistOfCycle:       true,   // name & id
-        bestNewArtist:       true    // name & id
+        artistOfCycle: { select: { id: true, name: true, imageUrl: true } },
+        bestNewArtist: { select: { id: true, name: true, imageUrl: true } },
       }
     });
 
@@ -228,7 +228,6 @@ app.get('/api/cycles/:id/stats', async (req, res, next) => {
         ? {
             id:         snapshot.trackOfCycle.id,
             title:      snapshot.trackOfCycle.title,
-            durationMs: snapshot.trackOfCycle.durationMs,
             artists:    snapshot.trackOfCycle.artistLinks.map(l => l.artist.name).join(', '),
             album: {
               title:    snapshot.trackOfCycle.album?.title ?? null,
@@ -238,11 +237,11 @@ app.get('/api/cycles/:id/stats', async (req, res, next) => {
         : null,
 
       artistOfCycle: snapshot.artistOfCycle
-        ? { id: snapshot.artistOfCycle.id, name: snapshot.artistOfCycle.name }
+        ? { id: snapshot.artistOfCycle.id, name: snapshot.artistOfCycle.name, imageUrl: snapshot.artistOfCycle.imageUrl }
         : null,
 
       bestNewArtist: snapshot.bestNewArtist
-        ? { id: snapshot.bestNewArtist.id, name: snapshot.bestNewArtist.name }
+        ? { id: snapshot.bestNewArtist.id, name: snapshot.bestNewArtist.name, imageUrl: snapshot.bestNewArtist.imageUrl }
         : null,
 
       computedAt:    snapshot.computedAt

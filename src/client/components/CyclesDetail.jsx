@@ -115,10 +115,6 @@ export default function CyclesDetail() {
                 </div>
             </div>
 
-
-
-            
-
             {!nominations || nominations.length === 0 ? (
                 <div className="empty-state">
                     No nominations for this cycle yet. 

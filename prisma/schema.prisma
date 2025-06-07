@@ -25,6 +25,7 @@ model Artist {
   id                      Int              @id @default(autoincrement())
   spotifyArtistId         String           @unique
   name                    String
+  imageUrl                String?
   trackLinks              TrackToArtist[]
   artistOfCycle           StatsSnapshot[]  @relation("ArtistOfCycle") 
   BestNewArtist           StatsSnapshot[]  @relation("BestNewArtist")
@@ -62,11 +63,12 @@ model TrackToArtist {
 
 model Nomination {
   id        Int     @id @default(autoincrement())
-  cycle     Cycle   @relation(fields: [cycleId], references: [id])
   cycleId   Int
-  track     Track   @relation(fields: [trackId], references: [id])
   trackId   Int
   rank      Int?    
+
+  cycle     Cycle   @relation(fields: [cycleId], references: [id])
+  track     Track   @relation(fields: [trackId], references: [id])
 
   @@unique([cycleId, trackId])
 }
@@ -74,15 +76,15 @@ model Nomination {
 model StatsSnapshot {
   cycle                 Cycle     @relation(fields: [cycleId], references: [id])
   cycleId               Int       @id
+  trackOfCycleId        Int?      @unique
+  artistOfCycleId       Int?
+  bestNewArtistId       Int?
+  computedAt            DateTime   @default(now())
 
   trackOfCycle         Track?     @relation("TrackOfCycle", fields: [trackOfCycleId], references: [id]) 
-  trackOfCycleId       Int?       @unique
-
   artistOfCycle        Artist?    @relation("ArtistOfCycle", fields: [artistOfCycleId], references: [id])
-  artistOfCycleId      Int?
-
   bestNewArtist        Artist?    @relation("BestNewArtist", fields: [bestNewArtistId], references: [id])
-  bestNewArtistId      Int?
+  
 
-  computedAt           DateTime   @default(now())
+  
 }

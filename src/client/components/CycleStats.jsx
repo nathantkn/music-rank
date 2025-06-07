@@ -49,6 +49,7 @@ export default function CycleStats({ cycleId, isActive }) {
                 const statsRes = await fetch(`/api/cycles/${cycleId}/stats`)
                 if (statsRes.ok) {
                     const data = await statsRes.json()
+                    console.log(data)
                     setStats(data)
                     setError(null)
                 }
@@ -134,7 +135,16 @@ export default function CycleStats({ cycleId, isActive }) {
                             <h4>Artist of the Cycle</h4>
                         </div>
                         <div className="stat-content">
-                            <div className="artist-name">{stats.artistOfCycle.name}</div>
+                            {stats.artistOfCycle.imageUrl && (
+                                <img 
+                                    src={stats.artistOfCycle.imageUrl} 
+                                    alt={`${stats.artistOfCycle.name} profile`}
+                                    className="artist-photo"
+                                />
+                            )}
+                            <div className="artist-info">
+                                <div className="artist-name">{stats.artistOfCycle.name}</div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -146,7 +156,16 @@ export default function CycleStats({ cycleId, isActive }) {
                             <h4>Best New Artist</h4>
                         </div>
                         <div className="stat-content">
-                            <div className="artist-name">{stats.bestNewArtist.name}</div>
+                            {stats.bestNewArtist.imageUrl && (
+                                <img 
+                                    src={stats.bestNewArtist.imageUrl} 
+                                    alt={`${stats.bestNewArtist.name} profile`}
+                                    className="artist-photo"
+                                />
+                            )}
+                            <div className="artist-info">
+                                <div className="artist-name">{stats.bestNewArtist.name}</div>
+                            </div>
                         </div>
                     </div>
                 )}

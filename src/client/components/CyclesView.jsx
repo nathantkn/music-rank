@@ -36,12 +36,6 @@ export default function CyclesView() {
     }
   }
 
-  // Delete a cycle
-  const deleteCycle = async (id) => {
-    await fetch(`/api/cycles/${id}`, { method: 'DELETE' })
-    setCycles(cycles.filter(c => c.id !== id))
-  }
-
   // Navigate to cycle chart
   const handleCycleClick = (cycleId) => {
     navigate(`/cycles/${cycleId}`)
@@ -92,7 +86,7 @@ export default function CyclesView() {
           </div>
         ))}
         
-        <div className="add-cycle-card" onClick={() => setShowCreateForm(true)}>
+        <div className="add-cycle-card" onClick={() => createCycle()}>
           <div className="add-icon">+</div>
           <div className="add-text">Create New Cycle</div>
         </div>
