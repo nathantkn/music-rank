@@ -15,7 +15,7 @@ datasource db {
 
 model Cycle {
   id              Int             @id @default(autoincrement())
-  name            String
+  name            String?
   isActive        Boolean         @default(false)
   nominations     Nomination[]
   statsSnapshot   StatsSnapshot?

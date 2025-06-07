@@ -42,6 +42,20 @@ export default function EditNominations() {
 
                 setNominations(nominationsWithRanks)
 
+                // Fetch current stats to get the existing best new artist
+                try {
+                    const statsRes = await fetch(`/api/cycles/${cycleId}/stats`)
+                    if (statsRes.ok) {
+                        const statsData = await statsRes.json()
+                        console.log('Existing stats:', statsData)
+                        if (statsData.bestNewArtist.id != null) {
+                            setSelectedBestNewArtist(String(statsData.bestNewArtist.id));
+                        }
+                    }
+                } catch (statsErr) {
+                    console.log('No existing stats found, starting fresh')
+                }
+
                 // Extract all unique artists from nominations
                 const artistsSet = new Set()
                 nominationsData.forEach(nomination => {
@@ -72,6 +86,18 @@ export default function EditNominations() {
         
         fetchData()
     }, [cycleId])
+
+    // Helper function to get album cover image
+    const getAlbumImage = (track) => {
+        if (track?.album?.imageUrl) {
+            return track.album.imageUrl
+        }
+        // Fallback to track image if available
+        if (track?.imageUrl) {
+            return track.imageUrl
+        }
+        return null
+    }
 
     // Handle drag start
     const handleDragStart = (e, index) => {
@@ -274,23 +300,36 @@ export default function EditNominations() {
             </div>
 
             {/* Best New Artist Selection */}
-            <div className="best-new-artist-section">
-                <h3>Best New Artist</h3>
-                <div className="best-new-artist-dropdown">
-                    <select 
-                        value={selectedBestNewArtist || ''}
-                        onChange={(e) => setSelectedBestNewArtist(e.target.value || null)}
-                        className="artist-select"
-                    >
-                        <option value=""></option>
-                        {allArtists.map(artist => (
-                            <option key={artist.id} value={artist.id}>
-                                {artist.name}
-                            </option>
-                        ))}
-                    </select>
+            {allArtists.length > 0 && (
+                <div className="best-new-artist-section">
+                    <h3>Best New Artist</h3>
+                    <div className="best-new-artist-dropdown">
+                        <select 
+                            value={selectedBestNewArtist || ''}
+                            onChange={(e) => setSelectedBestNewArtist(e.target.value || null)}
+                            className="artist-select"
+                        >
+                            {/* Show placeholder only if nothing is selected */}
+                            {selectedBestNewArtist == null && (
+                                <option value="">-- Select Artist --</option>
+                            )}
+                            
+                            {/* Sort selected artist to the top */}
+                            {[...allArtists]
+                            .sort((a, b) => {
+                                if (String(a.id) === selectedBestNewArtist) return -1;
+                                if (String(b.id) === selectedBestNewArtist) return 1;
+                                return a.name.localeCompare(b.name);
+                            })
+                            .map(artist => (
+                                <option key={artist.id} value={String(artist.id)}>
+                                    {artist.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="nominations-list">
                 {nominations.map((nomination, index) => (
@@ -308,10 +347,16 @@ export default function EditNominations() {
                             <div className="drag-handle">⋮⋮</div>
                         </div>
                         
-                        <div className="track-info">
-                            <div className="track-title">{nomination.track.title}</div>
+                        <div className="track-info-nom">
+                            <div className="album-art">
+                                <img 
+                                    src={getAlbumImage(nomination.track)} 
+                                    className="album-cover-image"
+                                />
+                            </div>
                             
                             <div className="track-details">
+                                <div className="track-title">{nomination.track.title}</div>
                                 <span className="artists">
                                     {nomination.track.artistLinks?.map(al => al.artist.name).join(', ') || 'Unknown Artist'}
                                 </span>

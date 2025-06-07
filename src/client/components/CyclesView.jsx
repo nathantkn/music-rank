@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import CreateForm from './CreateForm'
 import '../styles/CyclesView.css'
 
 export default function CyclesView() {
   const [cycles, setCycles] = useState([])
-  const [nameInput, setNameInput] = useState('')
-  const [isActiveInput, setIsActiveInput] = useState(false)
-  const [showCreateForm, setShowCreateForm] = useState(false)
   const navigate = useNavigate()
 
   // Fetch all cycles
@@ -22,15 +18,11 @@ export default function CyclesView() {
   const createCycle = async () => {
     const res = await fetch('/api/cycles', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: nameInput, isActive: isActiveInput })
+      headers: { 'Content-Type': 'application/json' }
     })
     if (res.ok) {
       const newCycle = await res.json()
       setCycles([...cycles, newCycle])
-      setNameInput('')
-      setIsActiveInput(false)
-      setShowCreateForm(false)
     } else {
       console.error('Failed to create cycle', await res.text())
     }
@@ -45,16 +37,6 @@ export default function CyclesView() {
     <div className="cycles-view">
       <h1 className="section-title">Cycles</h1>
       
-      {/* <CreateForm
-        showCreateForm={showCreateForm}
-        setShowCreateForm={setShowCreateForm}
-        nameInput={nameInput}
-        setNameInput={setNameInput}
-        isActiveInput={isActiveInput}
-        setIsActiveInput={setIsActiveInput}
-        createCycle={createCycle}
-      /> */}
-      
       <div className="cycles-grid">
         {cycles.map(cycle => (
           <div 
@@ -63,7 +45,7 @@ export default function CyclesView() {
             onClick={() => handleCycleClick(cycle.id)}
           >
             <div className="cycle-header">
-              <h2 className="cycle-title">{cycle.name}</h2>
+              <h2 className="cycle-title">{cycle.name || `Cycle ${cycle.id}`}</h2>
               {cycle.isActive && <span className="active-badge">ACTIVE</span>}
             </div>
             

@@ -129,57 +129,69 @@ export default function CycleStats({ cycleId, isActive }) {
                 )}
 
                 {/* Artist of the Cycle */}
-                {stats.artistOfCycle && (
-                    <div className="stat-card artist-of-cycle">
-                        <div className="stat-header">
-                            <h4>Artist of the Cycle</h4>
-                        </div>
-                        <div className="stat-content">
-                            {stats.artistOfCycle.imageUrl && (
-                                <img 
-                                    src={stats.artistOfCycle.imageUrl} 
-                                    alt={`${stats.artistOfCycle.name} profile`}
-                                    className="artist-photo"
-                                />
-                            )}
-                            <div className="artist-info">
-                                <div className="artist-name">{stats.artistOfCycle.name}</div>
-                            </div>
-                        </div>
+                <div className="stat-card artist-of-cycle">
+                    <div className="stat-header">
+                        <h4>Artist of the Cycle</h4>
                     </div>
-                )}
+                    <div className="stat-content">
+                        {stats.artistOfCycle ? (
+                            <>
+                                {stats.artistOfCycle.imageUrl && (
+                                    <img 
+                                        src={stats.artistOfCycle.imageUrl} 
+                                        alt={`${stats.artistOfCycle.name} profile`}
+                                        className="artist-photo"
+                                    />
+                                )}
+                                <div className="artist-info">
+                                    <div className="artist-name">{stats.artistOfCycle.name}</div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="stat-placeholder">
+                                <div className="placeholder-icon">👤</div>
+                                <div className="placeholder-text">No artist selected yet</div>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 {/* Best New Artist */}
-                {stats.bestNewArtist && (
-                    <div className="stat-card best-new-artist">
-                        <div className="stat-header">
-                            <h4>Best New Artist</h4>
-                        </div>
-                        <div className="stat-content">
-                            {stats.bestNewArtist.imageUrl && (
-                                <img 
-                                    src={stats.bestNewArtist.imageUrl} 
-                                    alt={`${stats.bestNewArtist.name} profile`}
-                                    className="artist-photo"
-                                />
-                            )}
-                            <div className="artist-info">
-                                <div className="artist-name">{stats.bestNewArtist.name}</div>
-                            </div>
-                        </div>
+                <div className="stat-card best-new-artist">
+                    <div className="stat-header">
+                        <h4>Best New Artist</h4>
                     </div>
-                )}
+                    <div className="stat-content">
+                        {stats.bestNewArtist ? (
+                            <>
+                                {stats.bestNewArtist.imageUrl && (
+                                    <img 
+                                        src={stats.bestNewArtist.imageUrl} 
+                                        alt={`${stats.bestNewArtist.name} profile`}
+                                        className="artist-photo"
+                                    />
+                                )}
+                                <div className="artist-info">
+                                    <div className="artist-name">{stats.bestNewArtist.name}</div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="stat-placeholder">
+                                <div className="placeholder-icon">⭐</div>
+                                <div className="placeholder-text">No best new artist selected yet</div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
 
             <div className="stats-footer">
                 <div className="stats-computed">
                     Last updated: {new Date(stats.computedAt).toLocaleDateString()}
                 </div>
-                {isActive && (
-                    <button onClick={computeStats} className="recompute-stats-btn">
-                        Recompute Stats
-                    </button>
-                )}
+                <button onClick={computeStats} className="recompute-stats-btn">
+                    Recompute Stats
+                </button>
             </div>
         </div>
     )

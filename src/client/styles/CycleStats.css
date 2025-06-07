@@ -179,6 +179,13 @@
   color: #666;
 }
 
+.placeholder-text {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-style: italic;
+  line-height: 1.4;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .cycle-stats {

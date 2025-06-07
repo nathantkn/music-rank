@@ -33,20 +33,15 @@ export default function App() {
       .catch(console.error)
   }, [selectedCycle])
 
-  // Delete a nomination
-  // const deleteNomination = async (id) => {
-  //   await fetch(`/api/nominations/${id}`, { method: 'DELETE' })
-  //   setNominations(nominations.filter(n => n.id !== id))
-  // }
-
   const activeCycle = cycles.find(c => c.isActive) || selectedCycle
 
   return (
     <div className="content">
-      {activeCycle && (
+      {activeCycle && selectedCycle && (
         <RankTable 
+          cycleId={selectedCycle.id}
           nominations={nominations}
-          // deleteNomination={deleteNomination}
+          cycleName={selectedCycle.name}
         />
       )}
     </div>

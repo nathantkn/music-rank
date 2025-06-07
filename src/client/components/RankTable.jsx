@@ -1,6 +1,6 @@
 import '../styles/RankTable.css'
 
-function RankTable({ nominations, cycleName = 'Current Cycle' }) {
+function RankTable({ cycleId, nominations, cycleName }) {
   const sortedNominations = [...nominations].sort((a, b) => {
     if (!a.rank && !b.rank) return 0
     if (!a.rank) return 1
@@ -31,7 +31,7 @@ function RankTable({ nominations, cycleName = 'Current Cycle' }) {
   return (
     <div className="billboard-container">
       <div className="billboard-header">
-        <h2 className="billboard-title">{cycleName} Chart</h2>
+        <h2 className="billboard-title">{cycleName || `Cycle ${cycleId}`} Chart</h2>
         <div className="billboard-date">
           {nominations.length} nominations
         </div>
@@ -60,7 +60,6 @@ function RankTable({ nominations, cycleName = 'Current Cycle' }) {
                     <div className="album-art">
                       <img 
                         src={getAlbumImage(nomination.track)} 
-                        alt={`${nomination.track?.title || 'Unknown'} album cover`}
                         className="album-cover-image"
                       />
                     </div>

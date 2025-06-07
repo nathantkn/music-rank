@@ -26,7 +26,7 @@ app.get('/api/cycles', async (req, res, next) => {
 // b) Create a new cycle
 app.post('/api/cycles', async (req, res, next) => {
   try {
-    const { name, isActive = false } = req.body;
+    const { name = '', isActive = false } = req.body;
 
     // Flip off any other active cycle
     if (isActive) {

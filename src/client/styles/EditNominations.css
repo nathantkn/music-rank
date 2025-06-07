@@ -196,9 +196,12 @@
   cursor: grabbing;
 }
 
-.track-info {
+.track-info-nom {
   flex: 1;
   margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .track-title {
@@ -271,6 +274,14 @@
 
 .empty-state button:hover {
   background: #5a6fd8;
+}
+
+.album-cover-image {
+  color: white;
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 4px;
 }
 
 /* Mobile responsiveness */

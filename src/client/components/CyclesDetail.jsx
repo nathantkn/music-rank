@@ -83,7 +83,7 @@ export default function CyclesDetail() {
         <div className="cycles-detail">
             <div className="cycle-header">
                 <div className="cycle-info">
-                    <h2>{selectedCycle.name} - Nominations</h2>
+                    <h2>{selectedCycle.name || `Cycle ${cycleId}`}</h2>
                     {selectedCycle.isActive && <span className="active-badge">ACTIVE</span>}
                 </div>
                 
@@ -125,7 +125,7 @@ export default function CyclesDetail() {
             ) : (
                 <>
                     <CycleStats cycleId={selectedCycle.id} isActive={selectedCycle.isActive} />
-                    <RankTable nominations={nominations} cycleName={selectedCycle.name} />
+                    <RankTable cycleId={selectedCycle.id} nominations={nominations} cycleName={selectedCycle.name} />
                 </>
             )}
         </div>
