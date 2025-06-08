@@ -56,7 +56,7 @@ export default function App() {
     const startAutoRotate = () => {
       autoRotateRef.current = setInterval(() => {
         setCurrentCardIndex(prev => (prev + 1) % 3)
-      }, 10000)
+      }, 7000)
     }
     
     startAutoRotate()
@@ -75,7 +75,7 @@ export default function App() {
       clearInterval(autoRotateRef.current)
       autoRotateRef.current = setInterval(() => {
         setCurrentCardIndex(prev => (prev + 1) % 3)
-      }, 10000)
+      }, 7000)
     }
   }
 

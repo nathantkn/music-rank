@@ -8,6 +8,7 @@ export default function NominateView() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
+  const [nominatedTracks, setNominatedTracks] = useState(new Set())
   const navigate = useNavigate()
 
   // Fetch all cycles
@@ -71,13 +72,12 @@ export default function NominateView() {
         body: JSON.stringify({
           cycleId: activeCycle.id,
           spotifyTrackId: track.spotifyId,
-          rank: null // You can add rank selection later if needed
+          rank: null
         })
       })
       
       if (res.ok) {
-        alert(`Successfully nominated "${track.name}" by ${track.artist}!`)
-        // Optionally clear search results or mark as nominated
+        setNominatedTracks(prev => new Set([...prev, track.spotifyId]))
       } else {
         const errorText = await res.text()
         alert(`Failed to nominate track: ${errorText}`)
@@ -86,6 +86,11 @@ export default function NominateView() {
       console.error('Nomination failed:', error)
       alert('Failed to nominate track. Please try again.')
     }
+  }
+
+  // Check if a track is nominated
+  const isTrackNominated = (trackSpotifyId) => {
+    return nominatedTracks.has(trackSpotifyId)
   }
 
   // Navigate to active cycle
@@ -156,11 +161,11 @@ export default function NominateView() {
                     )}
                   </div>
                   <button 
-                    className="nominate-button"
+                    className={`nominate-button ${isTrackNominated(track.spotifyId) ? 'nominated' : ''}`}
                     onClick={() => nominateTrack(track)}
-                    disabled={!activeCycle}
+                    disabled={!activeCycle || isTrackNominated(track.spotifyId)}
                   >
-                    Nominate
+                    {isTrackNominated(track.spotifyId) ? '✓' : 'Nominate'}
                   </button>
                 </div>
               ))}

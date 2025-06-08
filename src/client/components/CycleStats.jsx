@@ -35,7 +35,7 @@ export default function CycleStats({ cycleId, isActive }) {
             const res = await fetch(`/api/cycles/${cycleId}/stats`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bestNewArtistId: null })
+                body: JSON.stringify({ bestNewArtistId: stats?.bestNewArtist?.id || null})
             })
             
             if (res.ok) {
@@ -43,9 +43,7 @@ export default function CycleStats({ cycleId, isActive }) {
                 const statsRes = await fetch(`/api/cycles/${cycleId}/stats`)
                 if (statsRes.ok) {
                     const data = await statsRes.json()
-                    console.log(data)
                     setStats(data)
-                    setError(null)
                 }
             } else {
                 setError('Failed to compute stats')

@@ -266,7 +266,7 @@ app.get('/api/stats', async (req, res, next) => {
         artistOfCycle: { select: { id: true, name: true, imageUrl: true } },
         bestNewArtist: { select: { id: true, name: true, imageUrl: true } },
       },
-      orderBy: { computedAt: 'desc' }
+      orderBy: { cycleId: 'desc' }
     });
 
     res.json(snapshots);
