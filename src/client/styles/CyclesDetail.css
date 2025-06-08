@@ -19,11 +19,56 @@
   gap: 1rem;
 }
 
+.cycle-title-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .cycle-info h2 {
   margin: 0;
   font-size: 2rem;
   font-weight: bold;
   color: #333;
+}
+
+.edit-name-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.edit-name-btn:hover {
+  opacity: 1;
+  background: #f0f0f0;
+  transform: scale(1.1);
+}
+
+.name-edit-container {
+  display: flex;
+  align-items: center;
+}
+
+.name-edit-input {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  padding: 0.5rem;
+  background: white;
+  outline: none;
+  min-width: 300px;
+}
+
+.name-edit-input:focus {
+  border-color: #5a6fd8;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .active-badge {

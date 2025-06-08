@@ -85,14 +85,22 @@
 }
 
 .album-art {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.album-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .album-placeholder {
@@ -111,31 +119,25 @@
   flex: 1;
 }
 
-.position-badge {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  display: inline-block;
-  margin-bottom: 0.5rem;
-}
-
 .song-info {
   margin-top: 0.5rem;
 }
 
 .song-title {
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: bold;
+  font-size: 1.2rem;
   line-height: 1.2;
   margin-bottom: 0.25rem;
+  color: white;
+  text-align: center;
 }
 
-.artist-name {
+.artist-names {
   font-size: 0.85rem;
   opacity: 0.9;
   line-height: 1.2;
+  color: white;
+  text-align: center;
 }
 
 .delete-btn {

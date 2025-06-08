@@ -10,6 +10,8 @@ export default function CyclesDetail() {
     const [selectedCycle, setSelectedCycle] = useState(null)
     const [nominations, setNominations] = useState([])
     const [loading, setLoading] = useState(true)
+    const [isEditingName, setIsEditingName] = useState(false)
+    const [editedName, setEditedName] = useState('')
 
     // Fetch cycle data when component mounts
     useEffect(() => {
@@ -66,6 +68,57 @@ export default function CyclesDetail() {
         }
     }
 
+    // Handle name editing
+    const startEditingName = () => {
+        setEditedName(selectedCycle.name || `Cycle ${cycleId}`)
+        setIsEditingName(true)
+    }
+
+    const saveNameEdit = async () => {
+        if (!editedName.trim()) {
+            cancelNameEdit()
+            return
+        }
+        
+        try {
+            const res = await fetch(`/api/cycles/${selectedCycle.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    name: editedName.trim(), 
+                    isActive: selectedCycle.isActive 
+                })
+            })
+            
+            if (res.ok) {
+                const updatedCycle = await res.json()
+                setSelectedCycle(updatedCycle)
+                setIsEditingName(false)
+            } else {
+                console.error('Failed to update cycle name')
+                cancelNameEdit()
+            }
+        } catch (err) {
+            console.error('Error updating cycle name:', err)
+            cancelNameEdit()
+        }
+    }
+
+    const cancelNameEdit = () => {
+        setIsEditingName(false)
+        setEditedName('')
+    }
+
+    const handleNameKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            saveNameEdit()
+        } else if (e.key === 'Escape') {
+            e.preventDefault()
+            cancelNameEdit()
+        }
+    }
+
     if (loading) {
         return <div className="loading-state">Loading cycle...</div>
     }
@@ -83,7 +136,30 @@ export default function CyclesDetail() {
         <div className="cycles-detail">
             <div className="cycle-header">
                 <div className="cycle-info">
-                    <h2>{selectedCycle.name || `Cycle ${cycleId}`}</h2>
+                    {isEditingName ? (
+                        <div className="name-edit-container">
+                            <input
+                                type="text"
+                                value={editedName}
+                                onChange={(e) => setEditedName(e.target.value)}
+                                onKeyDown={handleNameKeyPress}
+                                onBlur={saveNameEdit}
+                                className="name-edit-input"
+                                autoFocus
+                            />
+                        </div>
+                    ) : (
+                        <div className="cycle-title-container">
+                            <h2>{selectedCycle.name}</h2>
+                            <button 
+                                className="edit-name-btn"
+                                onClick={startEditingName}
+                                title="Edit cycle name"
+                            >
+                                ✏️
+                            </button>
+                        </div>
+                    )}
                     {selectedCycle.isActive && <span className="active-badge">ACTIVE</span>}
                 </div>
                 

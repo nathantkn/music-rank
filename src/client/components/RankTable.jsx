@@ -31,7 +31,7 @@ function RankTable({ cycleId, nominations, cycleName }) {
   return (
     <div className="billboard-container">
       <div className="billboard-header">
-        <h2 className="billboard-title">{cycleName || `Cycle ${cycleId}`} Chart</h2>
+        <h2 className="billboard-title">{cycleName} Chart</h2>
         <div className="billboard-date">
           {nominations.length} nominations
         </div>
@@ -64,7 +64,7 @@ function RankTable({ cycleId, nominations, cycleName }) {
                       />
                     </div>
                     <div className="song-details">
-                      <div className="song-title">
+                      <div className="song-title-table">
                         {nomination.track?.title || nomination.trackId}
                       </div>
                       {nomination.track?.album?.title && (

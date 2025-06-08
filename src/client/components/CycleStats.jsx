@@ -4,20 +4,17 @@ import '../styles/CycleStats.css'
 export default function CycleStats({ cycleId, isActive }) {
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
 
     useEffect(() => {
         if (!cycleId) return
         
         setLoading(true)
-        setError(null)
         
         fetch(`/api/cycles/${cycleId}/stats`)
             .then(async (res) => {
                 if (res.status === 404) {
                     // No stats computed yet
                     setStats(null)
-                    setError(null)
                     return
                 }
                 if (!res.ok) {
@@ -26,10 +23,7 @@ export default function CycleStats({ cycleId, isActive }) {
                 const data = await res.json()
                 setStats(data)
             })
-            .catch(err => {
-                console.error('Error fetching stats:', err)
-                setError(err.message)
-            })
+            .catch(console.error)
             .finally(() => {
                 setLoading(false)
             })
@@ -68,19 +62,6 @@ export default function CycleStats({ cycleId, isActive }) {
         return (
             <div className="cycle-stats">
                 <div className="stats-loading">Computing cycle statistics...</div>
-            </div>
-        )
-    }
-
-    if (error) {
-        return (
-            <div className="cycle-stats">
-                <div className="stats-error">
-                    <p>Error loading stats: {error}</p>
-                    <button onClick={computeStats} className="compute-stats-btn">
-                        Retry Computing Stats
-                    </button>
-                </div>
             </div>
         )
     }

@@ -251,6 +251,30 @@ app.get('/api/cycles/:id/stats', async (req, res, next) => {
   }
 });
 
+// c) Get stats for all cycles
+app.get('/api/stats', async (req, res, next) => {
+  try {
+    const snapshots = await db.statsSnapshot.findMany({
+      include: {
+        cycle: { select: { id: true, name: true } },
+        trackOfCycle: {
+          include: {
+            album: true,
+            artistLinks: { include: { artist: true } }
+          }
+        },
+        artistOfCycle: { select: { id: true, name: true, imageUrl: true } },
+        bestNewArtist: { select: { id: true, name: true, imageUrl: true } },
+      },
+      orderBy: { computedAt: 'desc' }
+    });
+
+    res.json(snapshots);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Global error handler
 app.use((err, req, res, next) => { 
   console.error(err);
