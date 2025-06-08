@@ -1,16 +1,26 @@
 import express from 'express'
-import { PrismaClient } from '@prisma/client';
+import db from './db.js';
+
 import {
   fetchSpotifyTrack,
   fetchYouTubeVideo,
   upsertTrack,
   searchSpotifyTracks
 } from './services/trackService.js';
+
 import { recomputeStatsForCycle } from './services/statsService.js';
+
+import {
+  computeArtistsWithMostTrackOfCycle,
+  computeArtistsWithMostArtistOfCycle,
+  computeArtistsWithMostNominations,
+  computeArtistsWithMostSongsInCycle,
+  computeLongestSongsAcrossAllCycles,
+  computeAlbumsWithMostSongsNominated
+} from './services/leaderboardService.js';
 
 const app = express();
 app.use(express.json());
-const db = new PrismaClient();
 
 // 1) CYCLES
 // a) Get all cycles
@@ -175,10 +185,8 @@ app.get('/api/search', async (req, res, next) => {
 
 // 4) STATS
 
-/**
- * a) Recomputes all stats for this cycle and upserts them.
- * Body: { bestNewArtistId: <artistId | null> }
- */
+// a) Recomputes all stats for this cycle and upserts them.
+// Body: { bestNewArtistId: <artistId | null> }
 app.post('/api/cycles/:id/stats', async (req, res, next) => {
   try {
     const cycleId = Number(req.params.id);
@@ -270,6 +278,62 @@ app.get('/api/stats', async (req, res, next) => {
     });
 
     res.json(snapshots);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 5) LEADERBOARD
+
+app.get('/api/leaderboards/track-of-cycle', async (req, res, next) => {
+  try {
+    const data = await computeArtistsWithMostTrackOfCycle(20);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/leaderboards/artist-of-cycle', async (req, res, next) => {
+  try {
+    const data = await computeArtistsWithMostArtistOfCycle(20);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/leaderboards/most-nominations', async (req, res, next) => {
+  try {
+    const data = await computeArtistsWithMostNominations(20);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/leaderboards/most-songs-in-cycle', async (req, res, next) => {
+  try {
+    const data = await computeArtistsWithMostSongsInCycle(20);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/leaderboards/longest-songs', async (req, res, next) => {
+  try {
+    const data = await computeLongestSongsAcrossAllCycles(20);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/leaderboards/most-songs-nominated-album', async (req, res, next) => {
+  try {
+    const data = await computeAlbumsWithMostSongsNominated(20);
+    res.json(data);
   } catch (err) {
     next(err);
   }

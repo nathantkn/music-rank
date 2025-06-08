@@ -1,4 +1,3 @@
-// services/statsService.js
 import db from '../db.js';
 
 /**

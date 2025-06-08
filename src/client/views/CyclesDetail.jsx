@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import RankTable from './RankTable'
+import RankTable from '../components/RankTable'
 import '../styles/CyclesDetail.css'
-import CycleStats from './CycleStats'
+import CycleStats from '../components/CycleStats'
 
 export default function CyclesDetail() {
     const navigate = useNavigate()
