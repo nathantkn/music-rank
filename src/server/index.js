@@ -287,7 +287,7 @@ app.get('/api/stats', async (req, res, next) => {
 
 app.get('/api/leaderboards/track-of-cycle', async (req, res, next) => {
   try {
-    const data = await computeArtistsWithMostTrackOfCycle(20);
+    const data = await computeArtistsWithMostTrackOfCycle(10);
     res.json(data);
   } catch (err) {
     next(err);
@@ -296,7 +296,7 @@ app.get('/api/leaderboards/track-of-cycle', async (req, res, next) => {
 
 app.get('/api/leaderboards/artist-of-cycle', async (req, res, next) => {
   try {
-    const data = await computeArtistsWithMostArtistOfCycle(20);
+    const data = await computeArtistsWithMostArtistOfCycle(10);
     res.json(data);
   } catch (err) {
     next(err);
@@ -305,7 +305,7 @@ app.get('/api/leaderboards/artist-of-cycle', async (req, res, next) => {
 
 app.get('/api/leaderboards/most-nominations', async (req, res, next) => {
   try {
-    const data = await computeArtistsWithMostNominations(20);
+    const data = await computeArtistsWithMostNominations(10);
     res.json(data);
   } catch (err) {
     next(err);
@@ -314,7 +314,7 @@ app.get('/api/leaderboards/most-nominations', async (req, res, next) => {
 
 app.get('/api/leaderboards/most-songs-in-cycle', async (req, res, next) => {
   try {
-    const data = await computeArtistsWithMostSongsInCycle(20);
+    const data = await computeArtistsWithMostSongsInCycle(10);
     res.json(data);
   } catch (err) {
     next(err);
@@ -323,7 +323,7 @@ app.get('/api/leaderboards/most-songs-in-cycle', async (req, res, next) => {
 
 app.get('/api/leaderboards/longest-songs', async (req, res, next) => {
   try {
-    const data = await computeLongestSongsAcrossAllCycles(20);
+    const data = await computeLongestSongsAcrossAllCycles(10);
     res.json(data);
   } catch (err) {
     next(err);
@@ -332,7 +332,7 @@ app.get('/api/leaderboards/longest-songs', async (req, res, next) => {
 
 app.get('/api/leaderboards/most-songs-nominated-album', async (req, res, next) => {
   try {
-    const data = await computeAlbumsWithMostSongsNominated(20);
+    const data = await computeAlbumsWithMostSongsNominated(10);
     res.json(data);
   } catch (err) {
     next(err);

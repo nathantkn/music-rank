@@ -5,6 +5,7 @@ export async function computeArtistsWithMostTrackOfCycle(limit = 20) {
     SELECT 
         tta."artistId"            AS "subjectId",
         a."name"                  AS "subjectName",
+        a."imageUrl"              AS "subjectImage",
         COUNT(*)                  AS "value"
     FROM "StatsSnapshot" s
     JOIN "Track" tr             ON s."trackOfCycleId" = tr.id
@@ -27,6 +28,7 @@ export async function computeArtistsWithMostArtistOfCycle(limit = 20) {
     SELECT 
         s."artistOfCycleId"       AS "subjectId",
         a."name"                  AS "subjectName",
+        a."imageUrl"              AS "subjectImage",
         COUNT(*)                  AS "value"
     FROM "StatsSnapshot" s
     JOIN "Artist" a             ON a.id = s."artistOfCycleId"
@@ -47,6 +49,7 @@ export async function computeArtistsWithMostNominations(limit = 20) {
     SELECT 
         tta."artistId"            AS "subjectId",
         a."name"                  AS "subjectName",
+        a."imageUrl"              AS "subjectImage",
         COUNT(*)                  AS "value"
     FROM "Nomination" n
     JOIN "Track" tr             ON n."trackId" = tr.id
@@ -69,10 +72,12 @@ export async function computeArtistsWithMostSongsInCycle(limit = 20) {
       SELECT
             tta."artistId"                   AS "artistId",
             n."cycleId"                      AS "cycleId",
+            a."imageUrl"                     AS "subjectImage",
             COUNT(DISTINCT n."trackId")      AS "trackCountInCycle"
       FROM "Nomination" n
       JOIN "Track" tr                    ON n."trackId" = tr.id
       JOIN "TrackToArtist" tta           ON tta."trackId" = tr.id
+      JOIN "Artist" a                    ON a.id = tta."artistId"
       GROUP BY tta."artistId", n."cycleId"
     )
     SELECT
