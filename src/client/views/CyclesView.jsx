@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/CyclesView.css'
 import {
-  applyRandomGradient
+  applyUniquePresetGradients
 } from '../utils/gradientUtils'
 
 export default function CyclesView() {
@@ -70,14 +70,11 @@ export default function CyclesView() {
   }
 
   useEffect(() => {
-    // Apply random gradients after cycles are rendered
-    if (cyclesGridRef.current) {
+    if (cyclesGridRef.current && cycles.length > 0) {
       const cards = cyclesGridRef.current.querySelectorAll('.cycle-card:not(.add-cycle-card)');
-      cards.forEach(card => {
-        applyRandomGradient(card);
-      });
+      applyUniquePresetGradients(cards);
     }
-  }, [cycles]); // Re-run when cycles change
+  }, [cycles]);
 
   return (
     <div className="cycles-view">

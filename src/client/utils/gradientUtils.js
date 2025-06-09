@@ -169,6 +169,31 @@ function initializeRandomGradients() {
   }
 }
 
+/**
+ * Applies unique preset gradients to a list of DOM elements (cycle cards).
+ * Falls back to random gradients if not enough unique presets are available.
+ * @param {NodeList} cardElements - List of card elements (DOM nodes)
+ * @param {string} fallbackMethod - 'harmonious' | 'random' | 'preset' (default: 'preset')
+ */
+function applyUniquePresetGradients(cardElements, fallbackMethod = 'random') {
+  if (!cardElements || cardElements.length === 0) return;
+
+  const shuffledPresets = [...GRADIENT_PRESETS].sort(() => Math.random() - 0.5);
+  const usedCount = Math.min(cardElements.length, shuffledPresets.length);
+
+  for (let i = 0; i < usedCount; i++) {
+    const card = cardElements[i];
+    const [startColor, endColor] = shuffledPresets[i];
+    card.style.setProperty('--gradient-start', startColor);
+    card.style.setProperty('--gradient-end', endColor);
+  }
+
+  // Apply fallback gradient method to remaining cards
+  for (let i = usedCount; i < cardElements.length; i++) {
+    applyRandomGradient(cardElements[i], fallbackMethod);
+  }
+}
+
 // Export functions for use in other modules
 export {
   getRandomHexColor,
@@ -177,5 +202,6 @@ export {
   getRandomHarmoniousGradient,
   applyRandomGradient,
   applyRandomGradientToAll,
-  initializeRandomGradients
+  initializeRandomGradients,
+  applyUniquePresetGradients
 };

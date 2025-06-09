@@ -161,8 +161,36 @@ app.put('/api/nominations/:id', async (req, res, next) => {
 // d) Delete a nomination
 app.delete('/api/nominations/:id', async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id, 10);
-    await db.nomination.delete({ where: { id } });
+    const nominationId = parseInt(req.params.id, 10);
+    
+    // Get the nomination first to find the associated track
+    const nomination = await db.nomination.findUnique({
+      where: { id: nominationId }
+    });
+    
+    if (!nomination) {
+      return res.status(404).json({ error: 'Nomination not found' });
+    }
+    
+    // Delete the nomination
+    await db.nomination.delete({ where: { id: nominationId } });
+    
+    // Check if this track has any other nominations
+    const otherNominations = await db.nomination.findMany({
+      where: { trackId: nomination.trackId }
+    });
+    
+    // Only delete the track and its artist links if no other nominations reference it
+    if (otherNominations.length === 0) {
+      // First delete all TrackToArtist relationships for this track
+      await db.trackToArtist.deleteMany({
+        where: { trackId: nomination.trackId }
+      });
+      
+      // Then delete the track itself
+      await db.track.delete({ where: { id: nomination.trackId } });
+    }
+    
     res.status(204).end();
   } catch (err) {
     next(err);

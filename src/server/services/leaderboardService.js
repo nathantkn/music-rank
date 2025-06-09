@@ -112,10 +112,19 @@ export async function computeLongestSongsAcrossAllCycles(limit = 20) {
     LIMIT ${limit};
   `;
 
-  return results.map(row => ({
-    ...row,
-    value: row.value ? Number(row.value) : null
-  }));
+  return results.map(row => {
+    const durationMs = Number(row.value);
+    
+    const totalSeconds = Math.floor(durationMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    let formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    return {
+      ...row,
+      value: formattedDuration,
+    };
+  });
 }
 
 export async function computeAlbumsWithMostSongsNominated(limit = 20) {

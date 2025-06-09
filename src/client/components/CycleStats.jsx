@@ -99,9 +99,6 @@ export default function CycleStats({ cycleId, isActive }) {
                             <div className="track-info">
                                 <div className="track-title">{stats.trackOfCycle.title}</div>
                                 <div className="track-artist">{stats.trackOfCycle.artists}</div>
-                                {stats.trackOfCycle.album?.title && (
-                                    <div className="track-album">{stats.trackOfCycle.album.title}</div>
-                                )}
                             </div>
                         </div>
                     </div>

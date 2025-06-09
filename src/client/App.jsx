@@ -122,17 +122,17 @@ export default function App() {
 
   // Create card data
   const getCardData = () => {
-    if (!stats || !artistOfCycleTrack) return []
+    if (!stats || !artistOfCycleTrack || !trackOfCycleLeader || !artistOfCycleLeader || !mostNominationsLeader) return []
     
     return [
       {
         type: 'Track of the Cycle',
-        text: `${stats.trackOfCycle.title} by ${getArtistsString(stats.trackOfCycle) || 'Unknown Artist'} is #1 on ${stats.cycle.name}.`,
+        text: `"${stats.trackOfCycle.title}" by ${getArtistsString(stats.trackOfCycle) || 'Unknown Artist'} is #1 on ${stats.cycle.name}.`,
         image: stats.trackOfCycle?.album?.imageUrl,
       },
       {
         type: 'Artist of the Cycle',
-        text: `${stats.artistOfCycle.name} has the most nominations on ${stats.cycle.name}. "${artistOfCycleTrack.track.title}" is ranked #${artistOfCycleTrack.rank}.`,
+        text: `${stats.artistOfCycle.name} is ${stats.cycle.name}'s Artist of the Cycle. Their best song, "${artistOfCycleTrack.track.title}", is ranked #${artistOfCycleTrack.rank}.`,
         image: stats.artistOfCycle?.imageUrl,
       },
       {
@@ -164,7 +164,7 @@ export default function App() {
   return (
     <>
       <div className="hero-section">
-        {stats && currentCard && (
+        {stats && currentCard ? (
           <>
             <button 
               className="nav-arrow nav-arrow-left"
@@ -212,16 +212,29 @@ export default function App() {
               ))}
             </div>
           </>
+        ) : (
+          <div className="hero-loading">
+            <div className="loading-content">
+              <div className="loading-skeleton loading-title"></div>
+              <div className="loading-skeleton loading-text"></div>
+              <div className="loading-skeleton loading-text short"></div>
+            </div>
+            <div className="loading-image">
+              <div className="loading-spinner small"></div>
+            </div>
+          </div>
         )}
       </div>
 
       <div className="content">
-        {selectedCycle && (
+        {selectedCycle ? (
           <RankTable 
             cycleId={selectedCycle.id}
             nominations={nominations}
             cycleName={selectedCycle.name}
           />
+        ) : (
+          <div className="loading-spinner"></div>
         )}
       </div>
     </>
