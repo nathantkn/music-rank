@@ -61,6 +61,27 @@
     font-weight: 500;
 }
 
+.name-with-image {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.artist-image {
+    color: white;
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.artist-placeholder {
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    background-color: #ccc;
+}
+
 .value-cell {
     font-weight: 600;
     color: #059669;

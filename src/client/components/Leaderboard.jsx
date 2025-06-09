@@ -16,6 +16,7 @@ export default function Leaderboard({ metric, title, value }) {
                     throw new Error(text || `HTTP ${res.status}`);
                 }
                 const data = await res.json();
+                console.log('Leaderboard data:', data);
                 setRows(data);
             } catch (err) {
                 console.error(err);
@@ -53,7 +54,20 @@ export default function Leaderboard({ metric, title, value }) {
                     {rows && rows.map((row, i) => (
                         <tr key={row.subjectId}>
                             <td className="rank-cell">{i + 1}</td>
-                            <td className="name-cell">{row.subjectName}</td>
+                            <td className="name-cell">
+                                <div className="name-with-image">
+                                    {row.subjectImage ? (
+                                        <img
+                                            src={row.subjectImage}
+                                            alt={row.subjectName}
+                                            className="artist-image"
+                                        />
+                                    ) : (
+                                        <div className="artist-placeholder"></div>
+                                    )}
+                                    <span>{row.subjectName}</span>
+                                </div>
+                            </td>
                             <td className="value-cell">{row.value}</td>
                         </tr>
                     ))}

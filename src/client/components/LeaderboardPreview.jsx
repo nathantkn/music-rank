@@ -39,7 +39,10 @@ function LeaderboardPreview({
     }
 
     return (
-        <div className={`preview-box ${isExpanded ? 'expanded' : ''}`} onClick={handleToggle}>
+        <div 
+            className={`preview-box ${isExpanded ? 'expanded' : ''}`} 
+            onClick={handleToggle}
+        >
             <div className="preview-content">
                 <div className="preview-left">
                     <h3 className="preview-title">{title}</h3>
@@ -50,10 +53,19 @@ function LeaderboardPreview({
                         <div className="preview-loading">Loading...</div>
                         ) : firstPlace ? (
                         <>
-                            <div className="preview-winner">
-                                <span className="winner-name">{firstPlace.subjectName}</span>
+                            <div className="winner-info">
+                                <div className="preview-winner">
+                                    <span className="winner-name">{firstPlace.subjectName}</span>
+                                </div>
+                                <div className="winner-value">{firstPlace.value}</div>
                             </div>
-                            <div className="winner-value">{firstPlace.value}</div>
+                            {firstPlace.subjectImage && (
+                                <img 
+                                    src={firstPlace.subjectImage} 
+                                    alt={firstPlace.subjectName}
+                                    className="winner-image"
+                                />
+                            )}
                         </>
                         ) : (
                             <div className="preview-loading">No data</div>

@@ -15,7 +15,7 @@ const leaderboardConfigs = [
     },
     {
         id: 'most-nominations',
-        title: 'Most Total Nominatations',
+        title: 'Most Total Nominations',
         value: 'Nominations'
     },
     {

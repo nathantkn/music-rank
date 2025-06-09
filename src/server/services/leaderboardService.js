@@ -72,7 +72,6 @@ export async function computeArtistsWithMostSongsInCycle(limit = 20) {
       SELECT
             tta."artistId"                   AS "artistId",
             n."cycleId"                      AS "cycleId",
-            a."imageUrl"                     AS "subjectImage",
             COUNT(DISTINCT n."trackId")      AS "trackCountInCycle"
       FROM "Nomination" n
       JOIN "Track" tr                    ON n."trackId" = tr.id
@@ -83,6 +82,7 @@ export async function computeArtistsWithMostSongsInCycle(limit = 20) {
     SELECT
       pcc."artistId"                    AS "subjectId",
       a."name"                          AS "subjectName",
+      a."imageUrl"                      AS "subjectImage",
       MAX(pcc."trackCountInCycle")      AS "value"
     FROM per_cycle_counts pcc
     JOIN "Artist" a                     ON a.id = pcc."artistId"
@@ -102,15 +102,12 @@ export async function computeLongestSongsAcrossAllCycles(limit = 20) {
     SELECT
         tr.id                       AS "subjectId",
         tr."title"                  AS "subjectName",
-        tr."durationMs"             AS "value",
-        al."title"                  AS "albumTitle",
-        GROUP_CONCAT(a."name", ', ') AS "artists"
-    FROM "Nomination" n
-    JOIN "Track" tr           ON n."trackId" = tr.id
-    JOIN "TrackToArtist" tta  ON tta."trackId" = tr.id
-    JOIN "Artist" a           ON a.id        = tta."artistId"
-    LEFT JOIN "Album" al       ON tr."albumId" = al.id
-    GROUP BY tr.id, tr."title", tr."durationMs", al."title"
+        al."imageUrl"                AS "subjectImage",
+        tr."durationMs"             AS "value"
+    FROM "Track" tr
+    JOIN "Album" al             ON tr."albumId" = al.id
+    WHERE tr."albumId" IS NOT NULL
+    GROUP BY tr.id, tr."title", tr."durationMs"
     ORDER BY tr."durationMs" DESC
     LIMIT ${limit};
   `;
@@ -126,6 +123,7 @@ export async function computeAlbumsWithMostSongsNominated(limit = 20) {
     SELECT
         tr."albumId"                                     AS "subjectId",
         al."title"                                       AS "subjectName",
+        al."imageUrl"                                    AS "subjectImage",
         COUNT(DISTINCT n."trackId")                      AS "value"
     FROM "Nomination" n
     JOIN "Track" tr             ON n."trackId" = tr.id
