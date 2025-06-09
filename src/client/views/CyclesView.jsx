@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/CyclesView.css'
+import {
+  applyRandomGradient
+} from '../utils/gradientUtils'
 
 export default function CyclesView() {
   const [cycles, setCycles] = useState([])
   const [stats, setStats] = useState([])
+  const cyclesGridRef = useRef(null);
   const navigate = useNavigate()
 
   // Fetch all cycles and stats
@@ -65,11 +69,21 @@ export default function CyclesView() {
     return track?.artist || ''
   }
 
+  useEffect(() => {
+    // Apply random gradients after cycles are rendered
+    if (cyclesGridRef.current) {
+      const cards = cyclesGridRef.current.querySelectorAll('.cycle-card:not(.add-cycle-card)');
+      cards.forEach(card => {
+        applyRandomGradient(card);
+      });
+    }
+  }, [cycles]); // Re-run when cycles change
+
   return (
     <div className="cycles-view">
       <h1 className="section-title">Cycles</h1>
       
-      <div className="cycles-grid">
+      <div className="cycles-grid" ref={cyclesGridRef}>
         {cycles.map(cycle => {
           const cycleStats = getStatsForCycle(cycle.id)
           const trackOfCycle = cycleStats?.trackOfCycle
