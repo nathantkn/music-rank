@@ -44,6 +44,9 @@ const GRADIENT_PRESETS = [
     ['#a78bfa', '#8b5cf6'], // Lavender
     ['#e879f9', '#d946ef'], // Magenta
     ['#fcd34d', '#fbbf24'], // Yellow
+    ['#d4d4d8', '#a1a1aa'], // Gray
+
+    // Lighter shades for softer gradients
     ['#fef08a', '#fde047'], // Light yellow
     ['#a3e635', '#65a30d'], // Light green
     ['#fca5a5', '#f87171'], // Light red
@@ -73,7 +76,8 @@ const GRADIENT_PRESETS = [
     ['#c084fc', '#a855f7'], // Dark lavender
     ['#e879f9', '#d946ef'], // Dark magenta
     ['#fcd34d', '#fbbf24'], // Dark light yellow
-    ['#d4d4d8', '#a1a1aa']  // Dark light gray
+    ['#d4d4d8', '#a1a1aa'],  // Dark light gray
+
 ];
 
 /**

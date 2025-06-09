@@ -9,53 +9,86 @@ export default function App() {
   const [stats, setStats] = useState(null)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [artistOfCycleTrack, setArtistOfCycleTrack] = useState(null)
+  const [trackOfCycleLeader, setTrackOfCycleLeader] = useState(null)
+  const [artistOfCycleLeader, setArtistOfCycleLeader] = useState(null)
+  const [mostNominationsLeader, setMostNominationsLeader] = useState(null)
   const autoRotateRef = useRef(null)
 
+  async function fetchStats() {
+    const res = await fetch(`/api/stats`);
+    if (!res.ok) throw new Error('Failed to fetch stats');
+    return res.json();
+  }
+
+  async function fetchNominations(cycleId) {
+    const res = await fetch(`/api/cycles/${cycleId}/nominations`);
+    if (!res.ok) throw new Error(`Failed to fetch nominations for cycle ${cycleId}`);
+    return res.json();
+  }
+
+  function findArtistOfCycleNomination(artist, nominations) {
+    if (!artist) return null;
+    return nominations
+      .filter(nom =>
+        nom.track?.artistLinks?.some(link => link.artist.id === artist.id)
+      )
+      .sort((a, b) => a.rank - b.rank)[0] || null;
+  }
+
+  async function fetchLeaderboard(leaderboardId) {
+    const res = await fetch(`/api/leaderboards/${leaderboardId}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const leader = data && data.length > 0 ? data[0] : null;
+    return leader;
+  }
+
   useEffect(() => {
-    // Fetch stats
-    fetch(`/api/stats`)
-      .then(async (res) => {
-          if (!res.ok) {
-            throw new Error('Failed to fetch stats')
-          }
-          const data = await res.json()
+    async function initialize() {
+      try {
+        const statsList = await fetchStats();
+        if (!statsList.length) return;
 
-          // Get the most recent stats (first in array since ordered by computedAt desc)
-          if (data.length > 0) {
-            const mostRecentStats = data[0]
-            setStats(mostRecentStats)
-            setSelectedCycle(mostRecentStats.cycle)
+        const mostRecent = statsList[0];
+        setStats(mostRecent);
+        setSelectedCycle(mostRecent.cycle);
 
-            // Fetch nominations for the last cycle
-            fetch(`/api/cycles/${mostRecentStats.cycle.id}/nominations`)
-              .then(r => r.json())
-              .then(nominationsData => {
-                setNominations(nominationsData)
-                
-                // Now find the nomination after nominations are loaded
-                if (mostRecentStats.artistOfCycle) {
-                  const artistOfCycleNom = nominationsData
-                    .filter(nom => 
-                      nom.track?.artistLinks?.some(link => link.artist.id === mostRecentStats.artistOfCycle.id)
-                    )
-                    .sort((a, b) => a.rank - b.rank)[0];
+        const nominationsData = await fetchNominations(mostRecent.cycle.id);
+        setNominations(nominationsData);
 
-                  setArtistOfCycleTrack(artistOfCycleNom)
-                }
-              })
-              .catch(console.error)
-          }
-      })
-      .catch(console.error)
-  }, [])
+        const artistNom = findArtistOfCycleNomination(
+          mostRecent.artistOfCycle,
+          nominationsData
+        );
+        setArtistOfCycleTrack(artistNom);
 
-  // Auto-rotate cards every 5 seconds
+        const trackOfCycleLeader = await fetchLeaderboard('track-of-cycle');
+        setTrackOfCycleLeader(trackOfCycleLeader)
+
+        const artistOfCycleLeader = await fetchLeaderboard('artist-of-cycle');
+        setArtistOfCycleLeader(artistOfCycleLeader)
+
+        const mostNominationsLeader = await fetchLeaderboard('most-nominations');
+        setMostNominationsLeader(mostNominationsLeader)
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    initialize();
+  }, []);
+
+  // Auto-rotate cards every 7 seconds
   useEffect(() => {
     if (!stats) return
     
     const startAutoRotate = () => {
       autoRotateRef.current = setInterval(() => {
-        setCurrentCardIndex(prev => (prev + 1) % 3)
+        setCurrentCardIndex(prev => (prev + 1) % 6)
       }, 7000)
     }
     
@@ -74,7 +107,7 @@ export default function App() {
     if (autoRotateRef.current) {
       clearInterval(autoRotateRef.current)
       autoRotateRef.current = setInterval(() => {
-        setCurrentCardIndex(prev => (prev + 1) % 3)
+        setCurrentCardIndex(prev => (prev + 1) % 6)
       }, 7000)
     }
   }
@@ -106,6 +139,21 @@ export default function App() {
         type: 'Best New Artist',
         text: `${stats.bestNewArtist.name} is the newest entry of Best New Artist!`,
         image: stats.bestNewArtist?.imageUrl,
+      },
+      {
+        type: 'Most Track of the Cycle',
+        text: `${trackOfCycleLeader.subjectName} has the most "Track of the Cycle" awards, winning ${trackOfCycleLeader.value} ${trackOfCycleLeader.value === 1 ? 'time' : 'times'}!`,
+        image: trackOfCycleLeader?.subjectImage,
+      },
+      {
+        type: 'Most Artist of the Cycle',
+        text: `${artistOfCycleLeader.subjectName} has the most "Artist of the Cycle" awards, winning ${artistOfCycleLeader.value} ${artistOfCycleLeader.value === 1 ? 'time' : 'times'}!`,
+        image: artistOfCycleLeader?.subjectImage,
+      },
+      {
+        type: 'Most Total Nominations',
+        text: `${mostNominationsLeader.subjectName} is the most nominated artist in history, with ${mostNominationsLeader.value} total ${mostNominationsLeader.value === 1 ? 'nomination' : 'nominations'}!`,
+        image: mostNominationsLeader?.subjectImage,
       }
     ]
   }
@@ -120,7 +168,7 @@ export default function App() {
           <>
             <button 
               className="nav-arrow nav-arrow-left"
-              onClick={() => handleCardChange((currentCardIndex - 1 + 3) % 3)}
+              onClick={() => handleCardChange((currentCardIndex - 1 + 6) % 6)}
             >
               ←
             </button>
@@ -150,7 +198,7 @@ export default function App() {
             
             <button 
               className="nav-arrow nav-arrow-right"
-              onClick={() => handleCardChange((currentCardIndex + 1) % 3)}
+              onClick={() => handleCardChange((currentCardIndex + 1) % 6)}
             >
               →
             </button>

@@ -16,7 +16,6 @@ export default function Leaderboard({ metric, title, value }) {
                     throw new Error(text || `HTTP ${res.status}`);
                 }
                 const data = await res.json();
-                console.log('Leaderboard data:', data);
                 setRows(data);
             } catch (err) {
                 console.error(err);
