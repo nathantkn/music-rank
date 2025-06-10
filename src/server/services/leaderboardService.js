@@ -148,3 +148,92 @@ export async function computeAlbumsWithMostSongsNominated(limit = 20) {
     value: Number(row.value)
   }));
 }
+
+export async function computeArtistsWithMostCycleAppearances(limit = 20) {
+  const results = await db.$queryRaw`
+    SELECT
+      tta."artistId"         AS "subjectId",
+      a."name"               AS "subjectName",
+      a."imageUrl"           AS "subjectImage",
+      COUNT(DISTINCT n."cycleId") AS "value"
+    FROM "Nomination" n
+    JOIN "Track" tr          ON n."trackId" = tr.id
+    JOIN "TrackToArtist" tta ON tta."trackId" = tr.id
+    JOIN "Artist" a          ON a.id = tta."artistId"
+    GROUP BY tta."artistId", a."name", a."imageUrl"
+    ORDER BY value DESC
+    LIMIT ${limit};
+  `;
+
+  return results.map(row => ({
+    ...row,
+    value: Number(row.value)
+  }));
+}
+
+export async function computeArtistsWithLongestCycleStreak(limit = 20) {
+  const cycles = await db.cycle.findMany({ orderBy: { id: 'asc' }, select: { id: true } });
+  const cycleOrder = cycles.map(c => c.id);
+
+  const appearances = await db.$queryRaw`
+    SELECT
+      tta."artistId" AS "artistId",
+      n."cycleId"    AS "cycleId",
+      a."name"       AS "subjectName",
+      a."imageUrl"   AS "subjectImage"
+    FROM "Nomination" n
+    JOIN "Track" tr           ON n."trackId" = tr.id
+    JOIN "TrackToArtist" tta  ON tr.id = tta."trackId"
+    JOIN "Artist" a           ON a.id = tta."artistId"
+    GROUP BY tta."artistId", n."cycleId"
+    ORDER BY tta."artistId", n."cycleId";
+  `;
+
+  const artistToCycles = new Map();
+  for (const row of appearances) {
+    if (!artistToCycles.has(row.artistId)) {
+      artistToCycles.set(row.artistId, {
+        name: row.subjectName,
+        imageUrl: row.subjectImage,
+        cycles: []
+      });
+    }
+    artistToCycles.get(row.artistId).cycles.push(row.cycleId);
+  }
+
+  function longestConsecutiveStreak(cycleIds, allCycles) {
+    const appearancesSet = new Set(cycleIds);
+    let maxStreak = 0, currentStreak = 0;
+    for (const c of allCycles) {
+      if (appearancesSet.has(c)) {
+        currentStreak++;
+        maxStreak = Math.max(maxStreak, currentStreak);
+      } else {
+        currentStreak = 0;
+      }
+    }
+    return maxStreak;
+  }
+
+  const streaks = [];
+
+  for (const [artistId, artistData] of artistToCycles) {
+    const streak = longestConsecutiveStreak(artistData.cycles, cycleOrder);
+    streaks.push({
+      subjectId: artistId,
+      subjectName: artistData.name,
+      subjectImage: artistData.imageUrl,
+      value: streak
+    });
+  }
+
+  return streaks
+    .sort((a, b) => b.value - a.value)
+    .slice(0, limit)
+    .map(row => ({
+      ...row,
+      value: Number(row.value)
+    }));
+}
+
+

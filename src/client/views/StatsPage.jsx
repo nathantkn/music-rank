@@ -32,7 +32,17 @@ const leaderboardConfigs = [
         id: 'most-songs-nominated-album',
         title: 'Most Album Nominations',
         value: 'Nominations'
-    }
+    },
+    {
+        id: 'artist-cycle-counts',
+        title: 'Most Cycle Appearances',
+        value: 'Cycles'
+    },
+    {
+        id: 'artist-cycle-streaks',
+        title: 'Longest Artist Cycle Appearances Streak',
+        value: 'Cycles'
+    },
 ];
 
 export default function StatsPage() {
