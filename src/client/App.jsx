@@ -137,7 +137,7 @@ export default function App() {
       },
       {
         type: 'Best New Artist',
-        text: `${stats.bestNewArtist.name} is the newest entry of Best New Artist!`,
+        text: `${stats.bestNewArtist.name} is the newest winner of Best New Artist, debuting on ${stats.cycle.name}!`,
         image: stats.bestNewArtist?.imageUrl,
       },
       {

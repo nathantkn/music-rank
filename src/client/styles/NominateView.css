@@ -247,7 +247,6 @@
 }
 
 .nominate-button:disabled {
-  background: #ced4da;
   opacity: 0.7;
   cursor: not-allowed;
 }
