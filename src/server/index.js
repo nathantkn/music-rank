@@ -3,9 +3,10 @@ import db from './db.js';
 
 import {
   fetchSpotifyTrack,
-  fetchYouTubeVideo,
   upsertTrack,
-  searchSpotifyTracks
+  searchSpotifyTracks,
+  searchAlbums,
+  fetchAlbumTracks,
 } from './services/trackService.js';
 
 import { recomputeStatsForCycle } from './services/statsService.js';
@@ -201,7 +202,7 @@ app.delete('/api/nominations/:id', async (req, res, next) => {
 
 
 // 3) SEARCH
-// a) Get search results
+// a) Get track search results
 app.get('/api/search', async (req, res, next) => {
   const { q } = req.query;
   if (!q) return res.status(400).json({ error: 'Query parameter "q" is required.' });
@@ -212,6 +213,28 @@ app.get('/api/search', async (req, res, next) => {
     next(err);
   }
 });
+
+// b) Get album search results
+app.get('/api/search/album', async (req, res, next) => {
+  try {
+    const { q } = req.query;
+    const results = await searchAlbums(q);
+    res.json(results);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// c) Get tracks from an album search result
+app.get('/api/search/album/:spotifyAlbumId', async (req, res, next) => {
+  try {
+    const albumData = await fetchAlbumTracks(req.params.spotifyAlbumId);
+    res.json(albumData);
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 // 4) STATS
 

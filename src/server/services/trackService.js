@@ -166,18 +166,49 @@ export async function searchSpotifyTracks(query) {
     }));
 }
 
-// 2) Fetch a YouTube video’s metadata
-export async function fetchYouTubeVideo(videoId) {
-    const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${YOUTUBE_API_KEY}`);
-    if (!res.ok) throw new Error(`YouTube API error: ${res.status}`);
-    const { items } = await res.json();
-    if (!items.length) throw new Error('YouTube video not found');
+export async function searchAlbums(query) {
+    const token = await getSpotifyAccessToken();
+    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=album`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
 
-    const item = items[0];
+    if (!res.ok) {
+        throw new Error(`Spotify album search failed: ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.albums.items.map(album => ({
+        id: album.id,
+        title: album.name,
+        artist: album.artists.map(a => a.name).join(', '),
+        imageUrl: album.images?.[0]?.url || null
+    }));
+}
+
+export async function fetchAlbumTracks(spotifyAlbumId) {
+    const token = await getSpotifyAccessToken();
+    const res = await fetch(`https://api.spotify.com/v1/albums/${spotifyAlbumId}`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    if (!res.ok) {
+        throw new Error(`Spotify album fetch failed: ${res.status}`);
+    }
+
+    const data = await res.json();
     return {
-        id:        item.id,
-        title:     item.snippet.title,
-        thumbnail: item.snippet.thumbnails.default.url,
-        duration:  item.contentDetails.duration  // ISO8601 string, e.g. "PT3M15S"
+        albumTitle: data.name,
+        imageUrl: data.images?.[0]?.url || null,
+        releaseDate: data.release_date,
+        tracks: data.tracks.items.map(track => ({
+            id: track.id,
+            title: track.name,
+            durationMs: track.duration_ms,
+            artists: track.artists.map(a => ({ id: a.id, name: a.name }))
+        }))
     };
 }
