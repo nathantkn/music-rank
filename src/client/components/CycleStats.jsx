@@ -153,8 +153,7 @@ export default function CycleStats({ cycleId, isActive }) {
                             </>
                         ) : (
                             <div className="stat-placeholder">
-                                <div className="placeholder-icon">⭐</div>
-                                <div className="placeholder-text">No best new artist selected yet</div>
+                                <div className="placeholder-text">No best new artist was selected.</div>
                             </div>
                         )}
                     </div>
