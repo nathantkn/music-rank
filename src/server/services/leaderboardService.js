@@ -236,4 +236,25 @@ export async function computeArtistsWithLongestCycleStreak(limit = 20) {
     }));
 }
 
+export async function computeAlbumsWithMostTrackOfCycle(limit = 20) {
+  const results = await db.$queryRaw`
+    SELECT
+      al.id             AS "subjectId",
+      al.title          AS "subjectName",
+      al."imageUrl"     AS "subjectImage",
+      COUNT(*)          AS "value"
+    FROM "StatsSnapshot" s
+    JOIN "Track" tr     ON s."trackOfCycleId" = tr.id
+    JOIN "Album" al     ON tr."albumId" = al.id
+    WHERE tr."albumId" IS NOT NULL
+    GROUP BY al.id, al.title, al."imageUrl"
+    ORDER BY value DESC
+    LIMIT ${limit};
+  `;
+
+  return results.map(row => ({
+    ...row,
+    value: Number(row.value)
+  }));
+}
 

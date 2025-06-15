@@ -19,7 +19,8 @@ import {
   computeLongestSongsAcrossAllCycles,
   computeAlbumsWithMostSongsNominated,
   computeArtistsWithMostCycleAppearances,
-  computeArtistsWithLongestCycleStreak
+  computeArtistsWithLongestCycleStreak,
+  computeAlbumsWithMostTrackOfCycle
 } from './services/leaderboardService.js';
 
 const app = express();
@@ -404,6 +405,15 @@ app.get('/api/leaderboards/artist-cycle-counts', async (req, res, next) => {
 app.get('/api/leaderboards/artist-cycle-streaks', async (req, res, next) => {
   try {
     const data = await computeArtistsWithLongestCycleStreak(10);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/leaderboards/album-track-of-cycle', async (req, res, next) => {
+  try {
+    const data = await computeAlbumsWithMostTrackOfCycle(10);
     res.json(data);
   } catch (err) {
     next(err);

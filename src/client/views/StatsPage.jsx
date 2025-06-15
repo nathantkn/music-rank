@@ -43,6 +43,12 @@ const leaderboardConfigs = [
         title: 'Longest Artist Cycle Appearances Streak',
         value: 'Cycles'
     },
+    {
+        id: 'album-track-of-cycle',
+        title: 'Albums with Most Track of the Cycle Wins',
+        value: 'Tracks'
+    },
+
 ];
 
 export default function StatsPage() {
