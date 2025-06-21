@@ -28,6 +28,7 @@ function getRandomHSLColor(minSaturation = 50, maxSaturation = 90, minLightness 
  * Predefined gradient color combinations that work well together
  */
 const GRADIENT_PRESETS = [
+    // Classic gradients
     ['#667eea', '#764ba2'], // Purple-blue
     ['#3b82f6', '#1d4ed8'], // Blue
     ['#10b981', '#047857'], // Green
@@ -46,15 +47,14 @@ const GRADIENT_PRESETS = [
     ['#fcd34d', '#fbbf24'], // Yellow
     ['#d4d4d8', '#a1a1aa'], // Gray
 
-    // Lighter shades for softer gradients
-    ['#fef08a', '#fde047'], // Light yellow
+    // // Lighter shades for softer gradients
     ['#a3e635', '#65a30d'], // Light green
     ['#fca5a5', '#f87171'], // Light red
     ['#c084fc', '#a855f7'],  // Light purple
     ['#f9a8d4', '#ec4899'], // Light pink
     ['#d4d4d8', '#a1a1aa'], // Light gray
 
-    // Darker shades for contrast
+    // // Darker shades for contrast
     ['#1e293b', '#334155'], // Dark blue-gray
     ['#111827', '#1f2937'], // Dark gray
     ['#0f172a', '#1e293b'], // Very dark blue-gray
@@ -78,6 +78,26 @@ const GRADIENT_PRESETS = [
     ['#fcd34d', '#fbbf24'], // Dark light yellow
     ['#d4d4d8', '#a1a1aa'],  // Dark light gray
 
+    // Additional unique gradients
+    ['hsl(238, 55%, 45%)', 'hsl(222, 69%, 56%)'], // Blue-purple
+    ['hsl(210, 100%, 50%)', 'hsl(180, 100%, 50%)'], // Blue-cyan
+    ['hsl(330, 100%, 50%)', 'hsl(300, 100%, 50%)'], // Pink-purple
+    ['hsl(240, 100%, 50%)', 'hsl(210, 100%, 50%)'], // Blue-indigo
+    ['hsl(0, 100%, 50%)', 'hsl(30, 100%, 50%)'], // Red-orange
+    ['hsl(300, 100%, 50%)', 'hsl(270, 100%, 50%)'], // Purple-pink
+    ['hsl(218, 74%, 58%)', 'hsl(216, 51%, 51%)'], // Teal-blue
+    ['hsl(266, 58%, 53%)', 'hsl(323, 50%, 45%)'], // Purple-pink
+    ['hsl(76, 62%, 59%)', 'hsl(1, 56%, 62%)'], // Green-yellow
+    ['hsl(319, 67%, 57%)', 'hsl(193, 80%, 46%)'], // Pink-cyan
+    ['hsl(15, 69%, 68%)', 'hsl(301, 90%, 48%)'], // Orange-purple
+    ['hsl(209, 68%, 42%)', 'hsl(225, 75%, 64%)'], // Blue-teal
+    ['hsl(36, 65%, 68%)', 'hsl(332, 79%, 70%)'], // Yellow-pink
+    ['hsl(0, 67%, 64%)', 'hsl(206, 56%, 42%)'], // Red-blue
+    ['hsl(344, 73%, 61%)', 'hsl(341, 58%, 56%)'], // Pink-red
+    ['hsl(25, 60%, 54%)', 'hsl(316, 67%, 56%)'], // Pink-red
+    ['hsl(276, 89%, 61%)', 'hsl(180, 71%, 61%)'], // Purple-cyan
+    ['hsl(252, 71%, 49%)', 'hsl(152, 56%, 64%)'], // Purple-green
+    ['hsl(237, 51%, 44%)', 'hsl(183, 66%, 65%)'], // Blue-teal
 ];
 
 /**
@@ -179,6 +199,7 @@ function applyUniquePresetGradients(cardElements, fallbackMethod = 'random') {
   if (!cardElements || cardElements.length === 0) return;
 
   const shuffledPresets = [...GRADIENT_PRESETS].sort(() => Math.random() - 0.5);
+  // const shuffledPresets = GRADIENT_PRESETS;
   const usedCount = Math.min(cardElements.length, shuffledPresets.length);
 
   for (let i = 0; i < usedCount; i++) {

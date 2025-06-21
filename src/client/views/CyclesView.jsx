@@ -4,6 +4,7 @@ import '../styles/CyclesView.css'
 import {
   applyUniquePresetGradients
 } from '../utils/gradientUtils'
+import { applyHardcodedGradientPresets } from '../utils/hardcodedGradientUtils'
 
 export default function CyclesView() {
   const [cycles, setCycles] = useState([])
@@ -72,6 +73,7 @@ export default function CyclesView() {
   useEffect(() => {
     if (cyclesGridRef.current && cycles.length > 0) {
       const cards = cyclesGridRef.current.querySelectorAll('.cycle-card:not(.add-cycle-card)');
+      // applyHardcodedGradientPresets(cards);
       applyUniquePresetGradients(cards);
     }
   }, [cycles]);
