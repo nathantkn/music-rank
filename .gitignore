@@ -25,10 +25,13 @@ dist-ssr
 
 /prisma/*
 !prisma/schema.prisma
-!prisma/migrations/
 prisma/*.db
+prisma/*.db-journal
 
 .env
+.env.local
+.env.production
+.vercel
 
 /src/server/scripts/client_secret.json
 /src/server/scripts/quickstart.js

@@ -76,8 +76,14 @@ export const GRADIENT_PRESETS = [
     { start: '#E7E7E5', end: '#1D2025' }, 
     { start: '#C21C0C', end: '#070E0E' }, // 75
     { start: '#41B736', end: '#011806' },
+    { start: '#CCA882', end: '#C9352F' },
     { start: '#E7E7E5', end: '#1D2025' },
-    { start: '#E7E7E5', end: '#1D2025' },
+    { start: '#40CA4A', end: '#66EBE3' },
+    { start: '#69A2A8', end: '#8E3A34' }, // 80
+    { start: '#8A8A8A', end: '#2A2A2A' },
+    { start: '#E2AA95', end: '#0C0105' },
+    { start: '#3A80E2', end: '#7ED3DE' },
+    { start: '#485233', end: '#1B1E12' },
 ];
 
 /**

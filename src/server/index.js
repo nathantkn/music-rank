@@ -1,5 +1,11 @@
+import 'dotenv/config';
 import express from 'express'
 import db from './db.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import {
   fetchSpotifyTrack,
@@ -425,6 +431,17 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: err.message });
 });
+
+// Serve static files from the React app (production)
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.join(__dirname, '../../dist');
+  app.use(express.static(distPath));
+  
+  // Handle React routing, return all requests to React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // Start server
 const PORT = process.env.PORT || 4000;
