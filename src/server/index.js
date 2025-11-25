@@ -426,12 +426,6 @@ app.get('/api/leaderboards/album-track-of-cycle', async (req, res, next) => {
   }
 });
 
-// Global error handler
-app.use((err, req, res, next) => { 
-  console.error(err);
-  res.status(500).json({ error: err.message });
-});
-
 // Serve static files from the React app (production)
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../../dist');
@@ -442,6 +436,12 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
+
+// Global error handler
+app.use((err, req, res, next) => { 
+  console.error(err);
+  res.status(500).json({ error: err.message });
+});
 
 // Start server
 const PORT = process.env.PORT || 4000;

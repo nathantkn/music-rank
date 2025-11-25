@@ -25,6 +25,7 @@ dist-ssr
 
 /prisma/*
 !prisma/schema.prisma
+!prisma/migrations/
 prisma/*.db
 prisma/*.db-journal
 
@@ -35,3 +36,6 @@ prisma/*.db-journal
 
 /src/server/scripts/client_secret.json
 /src/server/scripts/quickstart.js
+
+DEPLOYMENT.md
+*.sql
