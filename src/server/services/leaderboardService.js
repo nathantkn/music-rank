@@ -12,7 +12,7 @@ export async function computeArtistsWithMostTrackOfCycle(limit = 20) {
     JOIN "TrackToArtist" tta    ON tta."trackId" = tr.id
     JOIN "Artist" a             ON a.id = tta."artistId"
     WHERE s."trackOfCycleId" IS NOT NULL
-    GROUP BY tta."artistId", a."name"
+    GROUP BY tta."artistId", a."name", a."imageUrl"
     ORDER BY "value" DESC
     LIMIT ${limit};
   `;
@@ -33,7 +33,7 @@ export async function computeArtistsWithMostArtistOfCycle(limit = 20) {
     FROM "StatsSnapshot" s
     JOIN "Artist" a             ON a.id = s."artistOfCycleId"
     WHERE s."artistOfCycleId" IS NOT NULL
-    GROUP BY s."artistOfCycleId", a."name"
+    GROUP BY s."artistOfCycleId", a."name", a."imageUrl"
     ORDER BY "value" DESC
     LIMIT ${limit};
   `;
@@ -55,7 +55,7 @@ export async function computeArtistsWithMostNominations(limit = 20) {
     JOIN "Track" tr             ON n."trackId" = tr.id
     JOIN "TrackToArtist" tta    ON tta."trackId" = tr.id
     JOIN "Artist" a             ON a.id = tta."artistId"
-    GROUP BY tta."artistId", a."name"
+    GROUP BY tta."artistId", a."name", a."imageUrl"
     ORDER BY "value" DESC
     LIMIT ${limit};
   `;
@@ -86,7 +86,7 @@ export async function computeArtistsWithMostSongsInCycle(limit = 20) {
       MAX(pcc."trackCountInCycle")      AS "value"
     FROM per_cycle_counts pcc
     JOIN "Artist" a                     ON a.id = pcc."artistId"
-    GROUP BY pcc."artistId", a."name"
+    GROUP BY pcc."artistId", a."name", a."imageUrl"
     ORDER BY "value" DESC
     LIMIT ${limit};
   `;
@@ -107,7 +107,7 @@ export async function computeLongestSongsAcrossAllCycles(limit = 20) {
     FROM "Track" tr
     JOIN "Album" al             ON tr."albumId" = al.id
     WHERE tr."albumId" IS NOT NULL
-    GROUP BY tr.id, tr."title", tr."durationMs"
+    GROUP BY tr.id, tr."title", tr."durationMs", al."imageUrl"
     ORDER BY tr."durationMs" DESC
     LIMIT ${limit};
   `;
@@ -138,7 +138,7 @@ export async function computeAlbumsWithMostSongsNominated(limit = 20) {
     JOIN "Track" tr             ON n."trackId" = tr.id
     JOIN "Album" al             ON tr."albumId" = al.id
     WHERE tr."albumId" IS NOT NULL
-    GROUP BY tr."albumId", al."title"
+    GROUP BY tr."albumId", al."title", al."imageUrl"
     ORDER BY "value" DESC
     LIMIT ${limit};
   `;

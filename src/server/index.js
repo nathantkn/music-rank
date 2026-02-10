@@ -443,13 +443,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message });
 });
 
-// Start server (only in non-Vercel environments)
-if (process.env.VERCEL !== '1') {
-  const PORT = process.env.PORT || 4000;
-  app.listen(PORT, () => {
-    console.log(`API listening on http://localhost:${PORT}`);
-  });
-}
-
-// Export for Vercel serverless
-export default app;
+// Start server
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`API listening on http://localhost:${PORT}`);
+});
