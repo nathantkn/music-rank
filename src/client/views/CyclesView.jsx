@@ -70,20 +70,69 @@ export default function CyclesView() {
     return track?.artist || ''
   }
 
-  useEffect(() => {
-    if (cyclesGridRef.current && cycles.length > 0) {
-      const cards = cyclesGridRef.current.querySelectorAll('.cycle-card:not(.add-cycle-card)');
-      // applyHardcodedGradientPresets(cards);
-      applyUniquePresetGradients(cards);
-    }
-  }, [cycles]);
+  // useEffect(() => {
+  //   if (cyclesGridRef.current && cycles.length > 0) {
+  //     const cards = cyclesGridRef.current.querySelectorAll('.cycle-card:not(.add-cycle-card)');
+  //     applyUniquePresetGradients(cards);
+  //   }
+  // }, [cycles]);
+
+  // Get the active cycle
+  const currentCycle = cycles.find(cycle => cycle.isActive)
+  const otherCycles = cycles.filter(cycle => !cycle.isActive)
 
   return (
     <div className="cycles-view">
       <h1 className="section-title">Cycles</h1>
       
+      {/* Current Cycle Section */}
+      {currentCycle && (
+        <div className="current-cycle-section">
+          <h2 className="current-cycle-label">Current Cycle</h2>
+          <div 
+            className="current-cycle-card"
+            onClick={() => handleCycleClick(currentCycle.id)}
+          >
+            <div className="current-cycle-content">
+              <div className="current-album-art">
+                {getStatsForCycle(currentCycle.id)?.trackOfCycle?.album?.imageUrl ? (
+                  <img 
+                    src={getStatsForCycle(currentCycle.id).trackOfCycle.album.imageUrl} 
+                    alt={`${getStatsForCycle(currentCycle.id).trackOfCycle.album.title} cover`}
+                    className="current-album-image"
+                  />
+                ) : (
+                  <div className="current-album-placeholder">♪</div>
+                )}
+              </div>
+              <div className="current-cycle-info">
+                <h3 className="current-cycle-title">{currentCycle.name}</h3>
+                <div className="current-song-info">
+                  <div className="current-song-title">
+                    {getStatsForCycle(currentCycle.id)?.trackOfCycle?.title || 'No rankings yet'}
+                  </div>
+                  <div className="current-artist-names">
+                    {getArtistsString(getStatsForCycle(currentCycle.id)?.trackOfCycle)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Create Cycle */}
+      <div className="quick-create-section">
+        <div className="quick-create-card" onClick={() => createCycle()}>
+          <div className="quick-create-icon">+</div>
+          <div className="quick-create-text">Create New Cycle</div>
+        </div>
+      </div>
+
+      {/* All Cycles Grid */}
+      <h2 className="all-cycles-label">All Cycles</h2>
       <div className="cycles-grid" ref={cyclesGridRef}>
-        {cycles.map(cycle => {
+        {otherCycles.map(cycle => {
           const cycleStats = getStatsForCycle(cycle.id)
           const trackOfCycle = cycleStats?.trackOfCycle
 

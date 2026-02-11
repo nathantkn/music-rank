@@ -36,7 +36,9 @@ app.use(express.json());
 // a) Get all cycles
 app.get('/api/cycles', async (req, res, next) => {
   try {
-    const cycles = await db.cycle.findMany();
+    const cycles = await db.cycle.findMany({
+      orderBy: { id: 'asc' }
+    });
     res.json(cycles);
   } catch (err) {
     next(err);

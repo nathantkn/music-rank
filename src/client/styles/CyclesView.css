@@ -15,6 +15,156 @@
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
 }
 
+/* Current Cycle Section */
+.current-cycle-section {
+  max-width: 1200px;
+  margin: 0 auto 3rem;
+}
+
+.current-cycle-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.current-cycle-card {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 24px;
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 12px 48px rgba(31, 38, 135, 0.25),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.current-cycle-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 64px rgba(31, 38, 135, 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.current-cycle-content {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  color: white;
+}
+
+.current-album-art {
+  width: 150px;
+  height: 150px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.current-album-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+}
+
+.current-album-placeholder {
+  font-size: 4rem;
+  opacity: 0.8;
+}
+
+.current-cycle-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.current-cycle-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+}
+
+.current-song-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.current-song-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+}
+
+.current-artist-names {
+  font-size: 1.125rem;
+  opacity: 0.9;
+  color: white;
+}
+
+.all-cycles-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 1rem;
+  text-align: left;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Quick Create Section */
+.quick-create-section {
+  max-width: 1200px;
+  margin: 0 auto 2.5rem;
+}
+
+.quick-create-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: white;
+  width: 100%;
+}
+
+.quick-create-card:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(31, 38, 135, 0.2);
+}
+
+.quick-create-icon {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 300;
+}
+
+.quick-create-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+}
+
 .cycles-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -221,6 +371,51 @@
   
   .cycle-card {
     min-height: 180px;
+  }
+
+  /* Current Cycle Responsive */
+  .current-cycle-section {
+    margin-bottom: 2rem;
+  }
+
+  .current-cycle-card {
+    padding: 1.5rem;
+  }
+
+  .current-cycle-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .current-album-art {
+    width: 120px;
+    height: 120px;
+  }
+
+  .current-cycle-title {
+    font-size: 1.5rem;
+  }
+
+  .current-song-title {
+    font-size: 1.25rem;
+  }
+
+  .current-artist-names {
+    font-size: 1rem;
+  }
+
+  .quick-create-card {
+    max-width: 100%;
+    padding: 1rem;
+  }
+
+  .quick-create-icon {
+    font-size: 1.25rem;
+  }
+
+  .quick-create-text {
+    font-size: 0.9rem;
   }
 }
 
