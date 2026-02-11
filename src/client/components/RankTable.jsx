@@ -40,9 +40,10 @@ function RankTable({ cycleId, nominations, cycleName }) {
       <div className="table-container">
         <div className="table-header">
           <div className="table-header-row">
-            <div className="col-position">POS.</div>
+            <div className="col-position">POSITION</div>
             <div className="col-song">SONG</div>
             <div className="col-artist">ARTIST</div>
+            <div className="col-album">ALBUM</div>
           </div>
         </div>
 
@@ -67,16 +68,15 @@ function RankTable({ cycleId, nominations, cycleName }) {
                       <div className="song-title-table">
                         {nomination.track?.title || nomination.trackId}
                       </div>
-                      {nomination.track?.album?.title && (
-                        <div className="song-album">
-                          {nomination.track.album.title}
-                        </div>
-                      )}
                     </div>
                   </div>
                   
                   <div className="col-artist">
                     {getArtistsString(nomination.track)}
+                  </div>
+                  
+                  <div className="col-album">
+                    {nomination.track?.album?.title || '—'}
                   </div>
                 </div>
               )

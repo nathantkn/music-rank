@@ -44,7 +44,7 @@ export default function Leaderboard({ metric, title, value }) {
             <table className="leaderboard-table">
                 <thead>
                     <tr>
-                        <th className="rank-header">POS.</th>
+                        <th className="rank-header">POSITION</th>
                         <th className="name-header">Name</th>
                         <th className="value-header">{value}</th>
                     </tr>

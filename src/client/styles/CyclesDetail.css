@@ -1,6 +1,5 @@
 .cycles-detail {
   padding: 2rem;
-  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -10,7 +9,7 @@
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .cycle-info {
@@ -29,23 +28,27 @@
   margin: 0;
   font-size: 2rem;
   font-weight: bold;
-  color: #333;
+  color: white;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 .edit-name-btn {
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
   cursor: pointer;
   padding: 0.25rem;
-  border-radius: 4px;
-  opacity: 0.6;
-  transition: all 0.2s ease;
+  border-radius: 8px;
+  opacity: 0.8;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 1rem;
 }
 
 .edit-name-btn:hover {
   opacity: 1;
-  background: #f0f0f0;
+  background: rgba(255, 255, 255, 0.3);
   transform: scale(1.1);
 }
 
@@ -57,22 +60,27 @@
 .name-edit-input {
   font-size: 2rem;
   font-weight: bold;
-  color: #333;
-  border: 2px solid #667eea;
-  border-radius: 8px;
+  color: #1d1d1f;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
   padding: 0.5rem;
-  background: white;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   outline: none;
   min-width: 300px;
 }
 
 .name-edit-input:focus {
-  border-color: #5a6fd8;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 
 .active-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   color: white;
   padding: 0.25rem 0.5rem;
   border-radius: 20px;
@@ -80,6 +88,7 @@
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .cycle-actions {
@@ -90,62 +99,75 @@
 
 .make-active-btn, .edit-nominations-btn, .back-btn {
   padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .make-active-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(102, 126, 234, 0.3);
+  border-color: rgba(102, 126, 234, 0.5);
   color: white;
 }
 
 .make-active-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
 }
 
 .edit-nominations-btn {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: rgba(240, 147, 251, 0.3);
+  border-color: rgba(245, 87, 108, 0.5);
   color: white;
 }
 
 .edit-nominations-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+  background: rgba(240, 147, 251, 0.4);
+  box-shadow: 0 4px 16px rgba(245, 87, 108, 0.3);
 }
 
 .back-btn {
-  background: #f5f5f5;
-  color: #666;
-  border: 1px solid #ddd;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .back-btn:hover {
-  background: #e0e0e0;
-  color: #333;
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .loading-state, .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: white;
   font-size: 1.1rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .empty-state button {
   margin-top: 1rem;
   padding: 0.75rem 1.5rem;
-  background: #667eea;
+  background: rgba(102, 126, 234, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(102, 126, 234, 0.5);
   color: white;
-  border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .empty-state button:hover {
-  background: #5a6fd8;
+  background: rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
 }

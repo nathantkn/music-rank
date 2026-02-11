@@ -133,61 +133,63 @@ export default function CyclesDetail() {
     }
 
     return (
-        <div className="cycles-detail">
-            <div className="cycle-header">
-                <div className="cycle-info">
-                    {isEditingName ? (
-                        <div className="name-edit-container">
-                            <input
-                                type="text"
-                                value={editedName}
-                                onChange={(e) => setEditedName(e.target.value)}
-                                onKeyDown={handleNameKeyPress}
-                                onBlur={saveNameEdit}
-                                className="name-edit-input"
-                                autoFocus
-                            />
-                        </div>
-                    ) : (
-                        <div className="cycle-title-container">
-                            <h2>{selectedCycle.name}</h2>
+        // <>
+            <div className="cycles-detail">
+                <div className="cycle-header">
+                    <div className="cycle-info">
+                        {isEditingName ? (
+                            <div className="name-edit-container">
+                                <input
+                                    type="text"
+                                    value={editedName}
+                                    onChange={(e) => setEditedName(e.target.value)}
+                                    onKeyDown={handleNameKeyPress}
+                                    onBlur={saveNameEdit}
+                                    className="name-edit-input"
+                                    autoFocus
+                                />
+                            </div>
+                        ) : (
+                            <div className="cycle-title-container">
+                                <h2>{selectedCycle.name}</h2>
+                                <button 
+                                    className="edit-name-btn"
+                                    onClick={startEditingName}
+                                    title="Edit cycle name"
+                                >
+                                    ✏️
+                                </button>
+                            </div>
+                        )}
+                        {selectedCycle.isActive && <span className="active-badge">ACTIVE</span>}
+                    </div>
+                    
+                    <div className="cycle-actions">
+                        {!selectedCycle.isActive && (
                             <button 
-                                className="edit-name-btn"
-                                onClick={startEditingName}
-                                title="Edit cycle name"
+                                className="make-active-btn"
+                                onClick={makeActive}
                             >
-                                ✏️
+                                Make Active
                             </button>
-                        </div>
-                    )}
-                    {selectedCycle.isActive && <span className="active-badge">ACTIVE</span>}
-                </div>
-                
-                <div className="cycle-actions">
-                    {!selectedCycle.isActive && (
+                        )}
+                        
+                        {selectedCycle.isActive && (
+                            <button 
+                                className="edit-nominations-btn"
+                                onClick={() => navigate(`/cycles/${selectedCycle.id}/edit`)}
+                            >
+                                Edit Nominations
+                            </button>
+                        )}
+                        
                         <button 
-                            className="make-active-btn"
-                            onClick={makeActive}
+                            className="back-btn"
+                            onClick={() => navigate('/cycles')}
                         >
-                            Make Active
+                            Back to Cycles
                         </button>
-                    )}
-                    
-                    {selectedCycle.isActive && (
-                        <button 
-                            className="edit-nominations-btn"
-                            onClick={() => navigate(`/cycles/${selectedCycle.id}/edit`)}
-                        >
-                            Edit Nominations
-                        </button>
-                    )}
-                    
-                    <button 
-                        className="back-btn"
-                        onClick={() => navigate('/cycles')}
-                    >
-                        Back to Cycles
-                    </button>
+                    {/* </div> */}
                 </div>
             </div>
 
@@ -201,7 +203,9 @@ export default function CyclesDetail() {
             ) : (
                 <>
                     <CycleStats cycleId={selectedCycle.id} isActive={selectedCycle.isActive} />
-                    <RankTable cycleId={selectedCycle.id} nominations={nominations} cycleName={selectedCycle.name} />
+                    <div className="content">
+                        <RankTable cycleId={selectedCycle.id} nominations={nominations} cycleName={selectedCycle.name} />
+                    </div>
                 </>
             )}
         </div>

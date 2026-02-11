@@ -10,19 +10,20 @@
   align-items: flex-start;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .edit-info h2 {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
   font-weight: bold;
-  color: #333;
+  color: white;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 .edit-info p {
   margin: 0;
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 1rem;
 }
 
@@ -34,22 +35,26 @@
 
 .confirm-btn, .cancel-btn {
   padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 1rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .confirm-btn {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: rgba(52, 211, 153, 0.3);
+  border-color: rgba(52, 211, 153, 0.5);
   color: white;
 }
 
 .confirm-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+  background: rgba(52, 211, 153, 0.4);
+  box-shadow: 0 4px 16px rgba(52, 211, 153, 0.3);
 }
 
 .confirm-btn:disabled {
@@ -59,14 +64,14 @@
 }
 
 .cancel-btn {
-  background: #f5f5f5;
-  color: #666;
-  border: 1px solid #ddd;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .cancel-btn:hover:not(:disabled) {
-  background: #e0e0e0;
-  color: #333;
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .cancel-btn:disabled {
@@ -76,19 +81,22 @@
 
 /* Best New Artist Section */
 .best-new-artist-section {
-  background: white;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .best-new-artist-section h3 {
   margin: 0 0 1rem 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #333;
+  color: white;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -109,23 +117,27 @@
   flex: 1;
   max-width: 400px;
   padding: 0.75rem 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   font-size: 1rem;
-  background: white;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: white;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #333;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .artist-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 .artist-select:hover {
-  border-color: #667eea;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .artist-select option {
@@ -142,18 +154,22 @@
 .nomination-item {
   display: flex;
   align-items: center;
-  background: white;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
   padding: 1rem;
   cursor: grab;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .nomination-item:hover {
-  border-color: #667eea;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .nomination-item.dragging {
@@ -164,8 +180,8 @@
 }
 
 .nomination-item.drag-over {
-  border-color: #28a745;
-  background-color: #f8fff9;
+  border-color: rgba(52, 211, 153, 0.7);
+  background: rgba(52, 211, 153, 0.2);
   transform: scale(1.02);
 }
 
@@ -180,13 +196,14 @@
 .rank-number {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #667eea;
+  color: rgba(255, 215, 0, 0.9);
   margin-bottom: 0.25rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .drag-handle {
   font-size: 1.2rem;
-  color: #999;
+  color: rgba(255, 255, 255, 0.7);
   cursor: grab;
   user-select: none;
   line-height: 1;
@@ -208,7 +225,7 @@
 .track-title {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #333;
+  color: white;
   margin-bottom: 0.5rem;
   line-height: 1.3;
   overflow: hidden;
@@ -218,7 +235,7 @@
 
 .track-details {
   font-size: 0.95rem;
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
   line-height: 1.4;
   flex: 1;
   min-width: 0;
@@ -226,7 +243,7 @@
 
 .artists {
   font-weight: 500;
-  color: #555;
+  color: rgba(255, 255, 255, 0.9);
   
 }
 
@@ -235,9 +252,11 @@
 }
 
 .delete-btn {
-  background: #dc3545;
+  background: rgba(255, 59, 48, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 59, 48, 0.5);
   color: white;
-  border: none;
   border-radius: 50%;
   width: 32px;
   height: 32px;
@@ -247,13 +266,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
   line-height: 1;
 }
 
 .delete-btn:hover {
-  background: #c82333;
+  background: rgba(255, 59, 48, 0.6);
+  border-color: rgba(255, 59, 48, 0.8);
   transform: scale(1.1);
 }
 
@@ -264,23 +284,28 @@
 .loading-state, .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: white;
   font-size: 1.1rem;
 }
 
 .empty-state button {
   margin-top: 1rem;
   padding: 0.75rem 1.5rem;
-  background: #667eea;
+  background: rgba(102, 126, 234, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(102, 126, 234, 0.5);
   color: white;
-  border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .empty-state button:hover {
-  background: #5a6fd8;
+  background: rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
 }
 
 .album-cover-image {
@@ -288,7 +313,8 @@
   width: 80px;
   height: 80px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
   min-width: 80px;
   min-height: 80px
