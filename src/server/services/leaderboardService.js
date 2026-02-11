@@ -76,7 +76,6 @@ export async function computeArtistsWithMostSongsInCycle(limit = 20) {
       FROM "Nomination" n
       JOIN "Track" tr                    ON n."trackId" = tr.id
       JOIN "TrackToArtist" tta           ON tta."trackId" = tr.id
-      JOIN "Artist" a                    ON a.id = tta."artistId"
       GROUP BY tta."artistId", n."cycleId"
     )
     SELECT
@@ -185,7 +184,7 @@ export async function computeArtistsWithLongestCycleStreak(limit = 20) {
     JOIN "Track" tr           ON n."trackId" = tr.id
     JOIN "TrackToArtist" tta  ON tr.id = tta."trackId"
     JOIN "Artist" a           ON a.id = tta."artistId"
-    GROUP BY tta."artistId", n."cycleId"
+    GROUP BY tta."artistId", n."cycleId", a."name", a."imageUrl"
     ORDER BY tta."artistId", n."cycleId";
   `;
 
