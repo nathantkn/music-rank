@@ -143,6 +143,8 @@
 .artist-select option {
   padding: 0.5rem;
   font-size: 1rem;
+  color: black;
+  background: white;
 }
 
 .nominations-list {
