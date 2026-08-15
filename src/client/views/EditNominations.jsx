@@ -1,385 +1,424 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import '../styles/EditNominations.css'
+import Breadcrumb from '../components/Breadcrumb'
+import { getAlbumImage, getArtistsString } from '../lib/nominations'
+import { useToast } from '../components/Toast'
+
+const LONG_PRESS_MS = 280
 
 export default function EditNominations() {
     const navigate = useNavigate()
     const { cycleId } = useParams()
+    const toast = useToast()
+
     const [cycle, setCycle] = useState(null)
-    const [nominations, setNominations] = useState([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [draggedItem, setDraggedItem] = useState(null)
-    const [dragOverIndex, setDragOverIndex] = useState(null)
 
-    // Best New Artist selection state
-    const [allArtists, setAllArtists] = useState([])
-    const [selectedBestNewArtist, setSelectedBestNewArtist] = useState(null)
+    // The working order — rank is always position + 1, so every move and delete
+    // renumbers contiguously for free.
+    const [order, setOrder] = useState([])
+    const [focusIdx, setFocusIdx] = useState(null)
+    const [dragIdx, setDragIdx] = useState(null)
+    const [overIdx, setOverIdx] = useState(null)
+    const [removeIdx, setRemoveIdx] = useState(null)
+    const [bestNewArtist, setBestNewArtist] = useState('')
+
+    const rowRefs = useRef([])
+    const pendingFocus = useRef(null)
+    const longPress = useRef(null)
 
     // Fetch cycle and nominations data
     useEffect(() => {
         if (!cycleId) return
-        
+
         const fetchData = async () => {
             try {
                 setLoading(true)
-                
+
                 // Fetch cycle info
                 const cyclesRes = await fetch('/api/cycles')
                 const cycles = await cyclesRes.json()
                 const currentCycle = cycles.find(c => c.id.toString() === cycleId)
                 setCycle(currentCycle)
-                
+
                 // Fetch nominations
                 const nominationsRes = await fetch(`/api/cycles/${cycleId}/nominations`)
                 const nominationsData = await nominationsRes.json()
 
-                // Ensure all nominations have ranks
-                const nominationsWithRanks = nominationsData.map((nom, index) => ({
-                    ...nom,
-                    rank: nom.rank || (index + 1) // Use existing rank or assign based on order
-                }))
-
-                setNominations(nominationsWithRanks)
+                // Ranked rows first in rank order, then the unranked ones as they came back
+                const ranked = nominationsData
+                    .filter(nom => nom.rank != null)
+                    .sort((a, b) => a.rank - b.rank)
+                const unranked = nominationsData.filter(nom => nom.rank == null)
+                setOrder([...ranked, ...unranked])
 
                 // Fetch current stats to get the existing best new artist
                 try {
                     const statsRes = await fetch(`/api/cycles/${cycleId}/stats`)
                     if (statsRes.ok) {
                         const statsData = await statsRes.json()
-                        console.log('Existing stats:', statsData)
-                        if (statsData.bestNewArtist.id != null) {
-                            setSelectedBestNewArtist(String(statsData.bestNewArtist.id));
+                        if (statsData?.bestNewArtist?.id != null) {
+                            setBestNewArtist(String(statsData.bestNewArtist.id))
                         }
                     }
-                } catch (statsErr) {
+                } catch {
                     console.log('No existing stats found, starting fresh')
                 }
-
-                // Extract all unique artists from nominations
-                const artistsSet = new Set()
-                nominationsData.forEach(nomination => {
-                    if (nomination.track?.artistLinks) {
-                        nomination.track.artistLinks.forEach(artistLink => {
-                            if (artistLink.artist) {
-                                artistsSet.add(JSON.stringify({
-                                    id: artistLink.artist.id,
-                                    name: artistLink.artist.name
-                                }))
-                            }
-                        })
-                    }
-                })
-
-                const uniqueArtists = Array.from(artistsSet)
-                    .map(artistStr => JSON.parse(artistStr))
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                
-                setAllArtists(uniqueArtists)
-                
             } catch (err) {
                 console.error('Failed to fetch data:', err)
             } finally {
                 setLoading(false)
             }
         }
-        
+
         fetchData()
     }, [cycleId])
 
-    // Helper function to get album cover image
-    const getAlbumImage = (track) => {
-        if (track?.album?.imageUrl) {
-            return track.album.imageUrl
-        }
-        // Fallback to track image if available
-        if (track?.imageUrl) {
-            return track.imageUrl
-        }
-        return null
+    // Focus follows a row to its new index
+    useEffect(() => {
+        if (pendingFocus.current == null) return
+        rowRefs.current[pendingFocus.current]?.focus()
+        pendingFocus.current = null
+    })
+
+    // Every distinct artist in the cycle, alphabetical
+    const artists = useMemo(() => {
+        const seen = new Map()
+        order.forEach(nom => {
+            nom.track?.artistLinks?.forEach(link => {
+                if (link.artist) seen.set(link.artist.id, link.artist.name)
+            })
+        })
+        return [...seen.entries()]
+            .map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name))
+    }, [order])
+
+    // A removed artist can't stay picked
+    const pickedArtist = artists.some(a => String(a.id) === bestNewArtist) ? bestNewArtist : ''
+
+    const move = (from, to) => {
+        if (from === to || to < 0 || to >= order.length) return
+        setOrder(list => {
+            const next = [...list]
+            const [item] = next.splice(from, 1)
+            next.splice(to, 0, item)
+            return next
+        })
+        setFocusIdx(to)
+        setRemoveIdx(null)
+        pendingFocus.current = to
     }
 
-    // Handle drag start
-    const handleDragStart = (e, index) => {
-        setDraggedItem(index)
+    // 2. Keyboard — ↑ / ↓ move one position, Home / End send it to the ends
+    const handleListKeyDown = (e) => {
+        if (focusIdx === null) return
+        if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            move(focusIdx, focusIdx - 1)
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            move(focusIdx, focusIdx + 1)
+        } else if (e.key === 'Home') {
+            e.preventDefault()
+            move(focusIdx, 0)
+        } else if (e.key === 'End') {
+            e.preventDefault()
+            move(focusIdx, order.length - 1)
+        }
+    }
+
+    // 1. Mouse drag — HTML5 drag events
+    const handleDragStart = (e, pos) => {
         e.dataTransfer.effectAllowed = 'move'
+        setDragIdx(pos)
     }
 
-    // Handle drag over
-    const handleDragOver = (e, index) => {
+    const handleDragOver = (e, pos) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = 'move'
-        setDragOverIndex(index)
+        if (overIdx !== pos) setOverIdx(pos)
     }
 
-    // Handle drag leave
-    const handleDragLeave = () => {
-        setDragOverIndex(null)
-    }
-
-    // Handle drop
-    const handleDrop = (e, dropIndex) => {
+    const handleDrop = (e, pos) => {
         e.preventDefault()
-        
-        if (draggedItem === null || draggedItem === dropIndex) {
-            setDraggedItem(null)
-            setDragOverIndex(null)
-            return
-        }
-
-        const newNominations = [...nominations]
-        
-        // Move the dragged item to the drop position
-        const draggedNomination = newNominations[draggedItem]
-        
-        // Remove the dragged item
-        newNominations.splice(draggedItem, 1)
-        // Insert it at the target position
-        newNominations.splice(dropIndex, 0, draggedNomination)
-        
-        // Update ranks based on new order
-        const updatedNominations = newNominations.map((nom, index) => ({
-            ...nom,
-            rank: index + 1
-        }))
-        
-        setNominations(updatedNominations)
-        setDraggedItem(null)
-        setDragOverIndex(null)
+        if (dragIdx !== null && dragIdx !== pos) move(dragIdx, pos)
+        setDragIdx(null)
+        setOverIdx(null)
     }
 
-    // Save rankings to database
+    const handleDragEnd = () => {
+        setDragIdx(null)
+        setOverIdx(null)
+    }
+
+    // 3. Touch — long-press the handle to pick the row up, then drag
+    const rowIndexAt = (clientY) => {
+        const idx = rowRefs.current.findIndex(el => {
+            if (!el) return false
+            const rect = el.getBoundingClientRect()
+            return clientY >= rect.top && clientY <= rect.bottom
+        })
+        return idx === -1 ? null : idx
+    }
+
+    const handlePressStart = (e, pos) => {
+        if (e.pointerType === 'mouse') return // mouse uses the drag path
+        e.currentTarget.setPointerCapture?.(e.pointerId)
+        clearTimeout(longPress.current)
+        longPress.current = setTimeout(() => {
+            setDragIdx(pos)
+            setOverIdx(pos)
+            setFocusIdx(pos)
+        }, LONG_PRESS_MS)
+    }
+
+    const handlePressMove = (e) => {
+        if (dragIdx === null) return
+        e.preventDefault()
+        const idx = rowIndexAt(e.clientY)
+        if (idx !== null && idx !== dragIdx) {
+            move(dragIdx, idx)
+            setDragIdx(idx)
+            setOverIdx(idx)
+        }
+    }
+
+    const handlePressEnd = () => {
+        clearTimeout(longPress.current)
+        setDragIdx(null)
+        setOverIdx(null)
+    }
+
+    useEffect(() => () => clearTimeout(longPress.current), [])
+
+    // Removal is immediate and Cancel won't bring it back — hence the inline confirm
+    const removeNomination = async (pos) => {
+        const nomination = order[pos]
+        const title = nomination.track?.title || 'That nomination'
+
+        try {
+            const res = await fetch(`/api/nominations/${nomination.id}`, { method: 'DELETE' })
+            if (!res.ok) throw new Error(await res.text())
+
+            setOrder(list => list.filter(nom => nom.id !== nomination.id))
+            setRemoveIdx(null)
+            setFocusIdx(null)
+            toast(`“${title}” removed from ${cycle.name}. This one saved immediately.`, 'warn')
+        } catch (err) {
+            console.error('Error deleting nomination:', err)
+            toast('Could not remove that nomination. Please try again.', 'warn')
+        }
+    }
+
+    // Order changes save here, together with the Best New Artist pick
     const handleConfirm = async () => {
         setSaving(true)
-        
+
         try {
-            // Update each nomination's rank
-            const updatePromises = nominations.map(nomination => 
+            await Promise.all(order.map((nomination, index) =>
                 fetch(`/api/nominations/${nomination.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rank: nomination.rank })
+                    body: JSON.stringify({ rank: index + 1 })
                 })
-            )
-            
-            await Promise.all(updatePromises)
+            ))
 
-            // Update stats with best new artist selection
             const statsResponse = await fetch(`/api/cycles/${cycleId}/stats`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    bestNewArtistId: selectedBestNewArtist ? parseInt(selectedBestNewArtist, 10) : null 
+                body: JSON.stringify({
+                    bestNewArtistId: pickedArtist ? parseInt(pickedArtist, 10) : null
                 })
             })
 
             if (!statsResponse.ok) {
                 throw new Error('Failed to update stats')
             }
-            
-            // Navigate back to cycle detail
+
+            const pickedName = artists.find(a => String(a.id) === pickedArtist)?.name
             navigate(`/cycles/${cycleId}`)
-            
+            toast(pickedName
+                ? `Rankings saved. Best New Artist: ${pickedName}.`
+                : 'Rankings saved. No Best New Artist picked.')
         } catch (err) {
             console.error('Failed to save rankings:', err)
-            alert('Failed to save rankings. Please try again.')
+            toast('Could not save the rankings. Please try again.', 'warn')
         } finally {
             setSaving(false)
         }
     }
 
-    // Cancel editing
     const handleCancel = () => {
         navigate(`/cycles/${cycleId}`)
-    }
-
-    // Delete nomination
-    const handleDelete = async (nominationId) => {
-        if (!confirm('Are you sure you want to remove this nomination?')) {
-            return
-        }
-        
-        try {
-            const response = await fetch(`/api/nominations/${nominationId}`, {
-                method: 'DELETE'
-            })
-            
-            if (response.ok) {
-                // Remove from local state and update ranks
-                const updatedNominations = nominations
-                    .filter(nom => nom.id !== nominationId)
-                    .map((nom, index) => ({
-                        ...nom,
-                        rank: index + 1
-                    }))
-                
-                setNominations(updatedNominations)
-
-                // Update artists list after deletion
-                const artistsSet = new Set()
-                updatedNominations.forEach(nomination => {
-                    if (nomination.track?.artistLinks) {
-                        nomination.track.artistLinks.forEach(artistLink => {
-                            if (artistLink.artist) {
-                                artistsSet.add(JSON.stringify({
-                                    id: artistLink.artist.id,
-                                    name: artistLink.artist.name
-                                }))
-                            }
-                        })
-                    }
-                })
-
-                const uniqueArtists = Array.from(artistsSet)
-                    .map(artistStr => JSON.parse(artistStr))
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                
-                setAllArtists(uniqueArtists)
-
-                // Clear best new artist selection if the artist is no longer available
-                if (selectedBestNewArtist && !uniqueArtists.find(artist => artist.id.toString() === selectedBestNewArtist)) {
-                    setSelectedBestNewArtist(null)
-                }
-            } else {
-                console.error('Failed to delete nomination')
-                alert('Failed to delete nomination. Please try again.')
-            }
-        } catch (err) {
-            console.error('Error deleting nomination:', err)
-            alert('Failed to delete nomination. Please try again.')
-        }
+        toast('Order changes discarded. Removals stay removed.', 'warn')
     }
 
     if (loading) {
-        return <div className="loading-state">Loading nominations...</div>
+        return <div className="edit-state">Loading nominations…</div>
     }
 
     if (!cycle) {
         return (
-            <div className="empty-state">
-                <p>Cycle not found</p>
-                <button onClick={() => navigate('/cycles')}>Back to Cycles</button>
+            <div className="edit-state">
+                <p>That cycle doesn’t exist.</p>
+                <button className="btn-ghost" onClick={() => navigate('/cycles')}>Back to cycles</button>
             </div>
         )
     }
 
-    if (!nominations || nominations.length === 0) {
+    if (order.length === 0) {
         return (
-            <div className="empty-state">
-                <p>No nominations to edit for this cycle</p>
-                <button onClick={() => navigate(`/cycles/${cycleId}`)}>Back to Cycle</button>
+            <div className="edit-state">
+                <p>Nothing to edit — {cycle.name} has no nominations yet.</p>
+                <button className="btn-ghost" onClick={() => navigate(`/cycles/${cycleId}`)}>
+                    Back to cycle
+                </button>
             </div>
         )
     }
+
+    const pickupHint = focusIdx === null
+        ? 'Tip: click a row, then press ↑ or ↓ to move it. Ranks renumber as you go.'
+        : `Row ${focusIdx + 1} selected — ↑ / ↓ to move it, Tab to leave.`
 
     return (
-        <div className="edit-nominations">
-            <div className="edit-header">
-                <div className="edit-info">
-                    <h2>Edit Rankings - {cycle.name}</h2>
-                    <p>Drag and drop to reorder nominations</p>
-                </div>
-                
-                <div className="edit-actions">
-                    <button 
-                        className="confirm-btn"
-                        onClick={handleConfirm}
-                        disabled={saving}
-                    >
-                        {saving ? 'Saving...' : 'Confirm Rankings'}
-                    </button>
-                    
-                    <button 
-                        className="cancel-btn"
-                        onClick={handleCancel}
-                        disabled={saving}
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </div>
+        <>
+            <Breadcrumb cycleId={cycleId} cycleName={cycle.name} deep />
 
-            {/* Best New Artist Selection */}
-            {allArtists.length > 0 && (
-                <div className="best-new-artist-section">
-                    <h3>Best New Artist</h3>
-                    <div className="best-new-artist-dropdown">
-                        <select 
-                            value={selectedBestNewArtist || ''}
-                            onChange={(e) => setSelectedBestNewArtist(e.target.value || null)}
-                            className="artist-select"
-                        >
-                            {/* Show placeholder only if nothing is selected */}
-                            {selectedBestNewArtist == null && (
-                                <option value="">-- Select Artist --</option>
-                            )}
-                            
-                            {/* Sort selected artist to the top */}
-                            {[...allArtists]
-                            .sort((a, b) => {
-                                if (String(a.id) === selectedBestNewArtist) return -1;
-                                if (String(b.id) === selectedBestNewArtist) return 1;
-                                return a.name.localeCompare(b.name);
-                            })
-                            .map(artist => (
-                                <option key={artist.id} value={String(artist.id)}>
-                                    {artist.name}
-                                </option>
-                            ))}
-                        </select>
+            <section className="edit-nominations">
+                <div className="edit-head">
+                    <div>
+                        <h1 className="edit-title">Edit rankings</h1>
+                        <p className="edit-help">
+                            Drag a row, or focus one and use ↑ ↓. On touch, press and hold the handle.
+                        </p>
                     </div>
-                </div>
-            )}
-
-            <div className="nominations-list">
-                {nominations.map((nomination, index) => (
-                    <div
-                        key={nomination.id}
-                        className={`nomination-item ${draggedItem === index ? 'dragging' : ''} ${dragOverIndex === index ? 'drag-over' : ''}`}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, index)}
-                        onDragOver={(e) => handleDragOver(e, index)}
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e) => handleDrop(e, index)}
-                    >
-                        <div className="rank-indicator">
-                            <span className="rank-number">#{nomination.rank}</span>
-                            <div className="drag-handle">⋮⋮</div>
-                        </div>
-                        
-                        <div className="track-info-nom">
-                            <div className="album-art">
-                                <img 
-                                    src={getAlbumImage(nomination.track)} 
-                                    className="album-cover-image"
-                                />
-                            </div>
-                            
-                            <div className="track-details">
-                                <div className="track-title">{nomination.track.title}</div>
-                                <span className="artists">
-                                    {nomination.track.artistLinks?.map(al => al.artist.name).join(', ') || 'Unknown Artist'}
-                                </span>
-                                
-                                {nomination.track.album && (
-                                    <span className="album"> • {nomination.track.album.title}</span>
-                                )}
-                            </div>
-                        </div>
-
-                        <button 
-                            className="delete-btn"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                handleDelete(nomination.id)
-                            }}
-                            title="Remove nomination"
-                        >
-                            ×
+                    <div className="edit-actions">
+                        <button className="btn-accent" onClick={handleConfirm} disabled={saving}>
+                            {saving ? 'Saving…' : 'Confirm rankings'}
+                        </button>
+                        <button className="btn-ghost" onClick={handleCancel} disabled={saving}>
+                            Cancel
                         </button>
                     </div>
-                ))}
-            </div>
-        </div>
+                </div>
+
+                <div className="edit-notice">
+                    <span className="edit-notice-tag">Unsaved</span>
+                    <span className="edit-notice-copy">
+                        Order changes save on Confirm. Removing a nomination happens right away and
+                        Cancel won’t bring it back.
+                    </span>
+                </div>
+
+                {artists.length > 0 && (
+                    <div className="bna-card">
+                        <div className="bna-label">Best New Artist</div>
+                        <select
+                            className="bna-select"
+                            value={pickedArtist}
+                            onChange={(e) => setBestNewArtist(e.target.value)}
+                            aria-label="Best New Artist"
+                        >
+                            <option value="">— No pick —</option>
+                            {[...artists]
+                                .sort((a, b) => {
+                                    if (String(a.id) === pickedArtist) return -1
+                                    if (String(b.id) === pickedArtist) return 1
+                                    return a.name.localeCompare(b.name)
+                                })
+                                .map(artist => (
+                                    <option key={artist.id} value={String(artist.id)}>
+                                        {artist.name}
+                                    </option>
+                                ))}
+                        </select>
+                    </div>
+                )}
+
+                <div className="rank-rows" onKeyDown={handleListKeyDown}>
+                    {order.map((nomination, pos) => {
+                        const selected = focusIdx === pos
+                        const dragging = dragIdx === pos
+                        const over = overIdx === pos && dragIdx !== pos
+                        const album = nomination.track?.album?.title
+
+                        return (
+                            <div
+                                key={nomination.id}
+                                ref={el => { rowRefs.current[pos] = el }}
+                                className={`rank-row${selected ? ' is-selected' : ''}${dragging ? ' is-dragging' : ''}${over ? ' is-over' : ''}`}
+                                tabIndex={0}
+                                draggable
+                                onFocus={() => setFocusIdx(pos)}
+                                onDragStart={(e) => handleDragStart(e, pos)}
+                                onDragOver={(e) => handleDragOver(e, pos)}
+                                onDrop={(e) => handleDrop(e, pos)}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <div className="rank-numeral">{pos + 1}</div>
+
+                                <div
+                                    className="rank-handle"
+                                    title="Drag to reorder"
+                                    onPointerDown={(e) => handlePressStart(e, pos)}
+                                    onPointerMove={handlePressMove}
+                                    onPointerUp={handlePressEnd}
+                                    onPointerCancel={handlePressEnd}
+                                >
+                                    ⣿
+                                </div>
+
+                                <div className="rank-track">
+                                    <div className="rank-art art-tile">
+                                        {getAlbumImage(nomination.track) && (
+                                            <img
+                                                src={getAlbumImage(nomination.track)}
+                                                alt=""
+                                                loading="lazy"
+                                                onError={e => { e.currentTarget.style.display = 'none' }}
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="rank-text">
+                                        <div className="rank-title">{nomination.track?.title}</div>
+                                        <div className="rank-sub">
+                                            {getArtistsString(nomination.track)}{album ? ` · ${album}` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="rank-remove">
+                                    {removeIdx === pos ? (
+                                        <div className="remove-confirm">
+                                            <span className="remove-copy">Remove for everyone?</span>
+                                            <button className="btn-danger" onClick={() => removeNomination(pos)}>
+                                                Remove
+                                            </button>
+                                            <button className="btn-keep" onClick={() => setRemoveIdx(null)}>
+                                                Keep
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            className="remove-btn"
+                                            title="Remove nomination"
+                                            onClick={() => setRemoveIdx(pos)}
+                                        >
+                                            ×
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                <p className="rank-hint">{pickupHint}</p>
+            </section>
+        </>
     )
 }

@@ -1,172 +1,126 @@
+/* Cycle detail: header, rename, actions */
+
 .cycles-detail {
-  padding: 2rem;
+  max-width: 1180px;
   margin: 0 auto;
+  padding: 20px var(--gutter) 80px;
 }
 
-.cycle-header {
+.detail-head {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--chrome-border);
+  margin-bottom: 28px;
 }
 
-.cycle-info {
+.detail-title-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
 }
 
-.cycle-title-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.detail-title {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
-.cycle-info h2 {
-  margin: 0;
-  font-size: 2rem;
-  font-weight: bold;
-  color: white;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+.detail-title-input {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-family: var(--font-ui);
+  background: var(--well);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 4px 12px;
+  width: 100%;
+  max-width: 320px;
 }
 
-.edit-name-btn {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 8px;
-  opacity: 0.8;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 1rem;
-}
-
-.edit-name-btn:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
-}
-
-.name-edit-container {
-  display: flex;
-  align-items: center;
-}
-
-.name-edit-input {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #1d1d1f;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 12px;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+.detail-title-input:focus {
   outline: none;
-  min-width: 300px;
 }
 
-.name-edit-input:focus {
-  border-color: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+.detail-counts {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-4);
 }
 
-.active-badge {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.cycle-actions {
+.detail-actions {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.make-active-btn, .edit-nominations-btn, .back-btn {
-  padding: 0.75rem 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+/* Promoting a cycle demotes the current one — say so before it happens */
+.confirm-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: var(--r-control);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-soft-border);
+  animation: panelIn 0.2s ease-out;
 }
 
-.make-active-btn {
-  background: rgba(102, 126, 234, 0.3);
-  border-color: rgba(102, 126, 234, 0.5);
-  color: white;
+.confirm-copy {
+  font-size: 13px;
+  color: var(--text-2);
+  max-width: 42ch;
 }
 
-.make-active-btn:hover {
-  transform: translateY(-2px);
-  background: rgba(102, 126, 234, 0.4);
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
-}
-
-.edit-nominations-btn {
-  background: rgba(240, 147, 251, 0.3);
-  border-color: rgba(245, 87, 108, 0.5);
-  color: white;
-}
-
-.edit-nominations-btn:hover {
-  transform: translateY(-2px);
-  background: rgba(240, 147, 251, 0.4);
-  box-shadow: 0 4px 16px rgba(245, 87, 108, 0.3);
-}
-
-.back-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.back-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.loading-state, .empty-state {
+.detail-empty {
+  padding: 28px 20px;
+  border-radius: var(--r-card);
+  background: var(--panel);
+  border: 1px solid var(--border);
   text-align: center;
-  padding: 3rem;
-  color: white;
-  font-size: 1.1rem;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  color: var(--text-4);
 }
 
-.empty-state button {
-  margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: rgba(102, 126, 234, 0.3);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(102, 126, 234, 0.5);
-  color: white;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+/* Loading / not found */
+
+.detail-state {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 60px var(--gutter);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  font-size: 15px;
+  color: var(--text-3);
 }
 
-.empty-state button:hover {
-  background: rgba(102, 126, 234, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+.detail-state-text {
+  font-size: 15px;
+  color: var(--text-3);
+}
+
+@media (max-width: 760px) {
+  .cycles-detail {
+    padding: 16px var(--gutter-narrow) 80px;
+  }
+
+  .detail-title,
+  .detail-title-input {
+    font-size: 26px;
+  }
+
+  .detail-state {
+    padding: 40px var(--gutter-narrow);
+  }
 }

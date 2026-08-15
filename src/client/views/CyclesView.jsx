@@ -1,16 +1,14 @@
-import { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import '../styles/CyclesView.css'
-import {
-  applyUniquePresetGradients
-} from '../utils/gradientUtils'
-import { applyHardcodedGradientPresets } from '../utils/hardcodedGradientUtils'
+import { getArtistsString, getAlbumImage } from '../lib/nominations'
 
 export default function CyclesView() {
   const [cycles, setCycles] = useState([])
   const [stats, setStats] = useState([])
-  const cyclesGridRef = useRef(null);
-  const navigate = useNavigate()
+  const [createOpen, setCreateOpen] = useState(false)
+  const [draftName, setDraftName] = useState('')
+  const [creating, setCreating] = useState(false)
 
   // Fetch all cycles and stats
   useEffect(() => {
@@ -19,7 +17,7 @@ export default function CyclesView() {
       .then(r => r.json())
       .then(setCycles)
       .catch(console.error)
-    
+
     // Fetch stats
     fetch(`/api/stats`)
       .then(async (res) => {
@@ -37,151 +35,174 @@ export default function CyclesView() {
       .catch(console.error)
   }, [])
 
-  // Create a new cycle
-  const createCycle = async () => {
-    const res = await fetch('/api/cycles', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: `Cycle ${cycles.length + 1}` })
-    })
-    if (res.ok) {
-      const newCycle = await res.json()
-      setCycles([...cycles, newCycle])
-    } else {
-      console.error('Failed to create cycle', await res.text())
-    }
-  }
-
-  // Navigate to cycle chart
-  const handleCycleClick = (cycleId) => {
-    navigate(`/cycles/${cycleId}`)
-  }
-
   // Get stats for a specific cycle
   const getStatsForCycle = (cycleId) => {
     return stats.find(stat => stat.cycleId === cycleId)
   }
 
-  // Helper function to get all artists from artistLinks
-  const getArtistsString = (track) => {
-    if (track?.artistLinks && track.artistLinks.length > 0) {
-      return track.artistLinks.map(link => link.artist.name).join(', ')
-    }
-    return track?.artist || ''
+  const currentCycle = cycles.find(cycle => cycle.isActive)
+  const archive = cycles.filter(cycle => !cycle.isActive)
+
+  const openCreate = () => {
+    setDraftName(`Cycle ${cycles.length + 1}`)
+    setCreateOpen(true)
   }
 
-  // useEffect(() => {
-  //   if (cyclesGridRef.current && cycles.length > 0) {
-  //     const cards = cyclesGridRef.current.querySelectorAll('.cycle-card:not(.add-cycle-card)');
-  //     applyUniquePresetGradients(cards);
-  //   }
-  // }, [cycles]);
+  const cancelCreate = () => {
+    setCreateOpen(false)
+    setDraftName('')
+  }
 
-  // Get the active cycle
-  const currentCycle = cycles.find(cycle => cycle.isActive)
-  const otherCycles = cycles.filter(cycle => !cycle.isActive)
+  // Creation only fires on confirm — never on opening the panel.
+  const confirmCreate = async () => {
+    const name = draftName.trim()
+    if (!name || creating) return
+
+    setCreating(true)
+    try {
+      const res = await fetch('/api/cycles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      })
+      if (res.ok) {
+        const newCycle = await res.json()
+        setCycles([...cycles, newCycle])
+        cancelCreate()
+      } else {
+        console.error('Failed to create cycle', await res.text())
+      }
+    } catch (err) {
+      console.error('Error creating cycle:', err)
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleDraftKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      confirmCreate()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelCreate()
+    }
+  }
+
+  const currentTrack = currentCycle && getStatsForCycle(currentCycle.id)?.trackOfCycle
 
   return (
-    <div className="cycles-view">
-      <h1 className="section-title">Cycles</h1>
-      
-      {/* Current Cycle Section */}
-      {currentCycle && (
-        <div className="current-cycle-section">
-          <h2 className="current-cycle-label">Current Cycle</h2>
-          <div 
-            className="current-cycle-card"
-            onClick={() => handleCycleClick(currentCycle.id)}
-          >
-            <div className="current-cycle-content">
-              <div className="current-album-art">
-                {getStatsForCycle(currentCycle.id)?.trackOfCycle?.album?.imageUrl ? (
-                  <img 
-                    src={getStatsForCycle(currentCycle.id).trackOfCycle.album.imageUrl} 
-                    alt={`${getStatsForCycle(currentCycle.id).trackOfCycle.album.title} cover`}
-                    className="current-album-image"
-                  />
-                ) : (
-                  <div className="current-album-placeholder">♪</div>
-                )}
-              </div>
-              <div className="current-cycle-info">
-                <h3 className="current-cycle-title">{currentCycle.name}</h3>
-                <div className="current-song-info">
-                  <div className="current-song-title">
-                    {getStatsForCycle(currentCycle.id)?.trackOfCycle?.title || 'No rankings yet'}
-                  </div>
-                  <div className="current-artist-names">
-                    {getArtistsString(getStatsForCycle(currentCycle.id)?.trackOfCycle)}
-                  </div>
-                </div>
-              </div>
-            </div>
+    <section className="cycles-view">
+      <div className="cycles-head">
+        <div>
+          <h1 className="page-title">Cycles</h1>
+          <p className="page-sub">
+            {cycles.length} {cycles.length === 1 ? 'cycle' : 'cycles'} run so far. One is active at a time.
+          </p>
+        </div>
+        <button className="btn-accent cycles-create" onClick={openCreate}>
+          + New cycle
+        </button>
+      </div>
+
+      {createOpen && (
+        <div className="create-panel">
+          <h3 className="create-panel-title">Create a new cycle</h3>
+          <p className="create-panel-note">
+            {currentCycle
+              ? `${currentCycle.name} stays active until you promote the new one from its page.`
+              : 'No cycle is active right now — promote the new one from its page.'}
+          </p>
+          <div className="create-panel-row">
+            <input
+              className="create-panel-input"
+              value={draftName}
+              onChange={e => setDraftName(e.target.value)}
+              onKeyDown={handleDraftKeyDown}
+              aria-label="New cycle name"
+              autoFocus
+            />
+            <button
+              className="btn-accent"
+              onClick={confirmCreate}
+              disabled={creating || !draftName.trim()}
+            >
+              {creating ? 'Creating…' : 'Create cycle'}
+            </button>
+            <button className="btn-ghost" onClick={cancelCreate}>Cancel</button>
           </div>
         </div>
       )}
 
-      {/* Quick Create Cycle */}
-      <div className="quick-create-section">
-        <div className="quick-create-card" onClick={() => createCycle()}>
-          <div className="quick-create-icon">+</div>
-          <div className="quick-create-text">Create New Cycle</div>
-        </div>
-      </div>
+      {currentCycle && (
+        <Link className="current-card" to={`/cycles/${currentCycle.id}`}>
+          <div className="current-art art-tile">
+            {getAlbumImage(currentTrack) && (
+              <img
+                src={getAlbumImage(currentTrack)}
+                alt=""
+                onError={e => { e.currentTarget.style.display = 'none' }}
+              />
+            )}
+          </div>
+          <div className="current-body">
+            <div className="current-meta">
+              <span className="chip-active">Active</span>
+            </div>
+            <h2 className="current-name">{currentCycle.name}</h2>
+            {currentTrack ? (
+              <>
+                <div className="current-track">{currentTrack.title}</div>
+                <div className="current-artist">{getArtistsString(currentTrack)}</div>
+              </>
+            ) : (
+              <div className="current-artist">No rankings yet</div>
+            )}
+          </div>
+          <span className="current-arrow">→</span>
+        </Link>
+      )}
 
-      {/* All Cycles Grid */}
-      <h2 className="all-cycles-label">All Cycles</h2>
-      <div className="cycles-grid" ref={cyclesGridRef}>
-        {otherCycles.map(cycle => {
-          const cycleStats = getStatsForCycle(cycle.id)
-          const trackOfCycle = cycleStats?.trackOfCycle
+      {archive.length > 0 && (
+        <>
+          <div className="archive-head">
+            <h3 className="archive-label">Archive</h3>
+            <span className="archive-rule" />
+          </div>
+          <div className="archive-grid">
+            {archive.map(cycle => {
+              const track = getStatsForCycle(cycle.id)?.trackOfCycle
 
-          return (
-            <div 
-              key={cycle.id} 
-              className={`cycle-card ${cycle.isActive ? 'active' : ''}`}
-              onClick={() => handleCycleClick(cycle.id)}
-            >
-              <div className="cycle-header">
-                <h2 className="cycle-title">{cycle.name}</h2>
-                {cycle.isActive && <span className="active-badge">ACTIVE</span>}
-              </div>
-
-              <div className="cycle-content">
-                <div className="album-art">
-                  {trackOfCycle?.album?.imageUrl ? (
-                    <img 
-                      src={trackOfCycle.album.imageUrl} 
-                      alt={`${trackOfCycle.album.title} cover`}
-                      className="album-image"
-                    />
-                  ) : (
-                    <div className="album-placeholder">♪</div>
-                  )}
-                </div>
-              </div>
-
-              <div className="cycle-footer">
-                <div className="number-one-info">
-                  <div className="song-info">
-                    <div className="song-title">
-                      {trackOfCycle?.title || ''}
+              return (
+                <Link key={cycle.id} className="archive-card" to={`/cycles/${cycle.id}`}>
+                  <div className="archive-card-head">
+                    <span className="archive-name">{cycle.name}</span>
+                    <span className="chip-archived">Archived</span>
+                  </div>
+                  <div className="archive-card-body">
+                    <div className="archive-art art-tile">
+                      {getAlbumImage(track) && (
+                        <img
+                          src={getAlbumImage(track)}
+                          alt=""
+                          loading="lazy"
+                          onError={e => { e.currentTarget.style.display = 'none' }}
+                        />
+                      )}
                     </div>
-                    <div className="artist-names">
-                      {getArtistsString(trackOfCycle)}
+                    <div className="archive-track">
+                      <div className="archive-title">{track?.title || 'No stats yet'}</div>
+                      <div className="archive-artist">
+                        {track ? getArtistsString(track) : 'Nothing computed for this cycle'}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-        
-        <div className="add-cycle-card" onClick={() => createCycle()}>
-          <div className="add-icon">+</div>
-          <div className="add-text">Create New Cycle</div>
-        </div>
-      </div>
-    </div>
+                </Link>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </section>
   )
 }

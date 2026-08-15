@@ -1,95 +1,129 @@
 import '../styles/RankTable.css'
+import { getAlbumImage, getArtistsString, rankedOf, unrankedOf } from '../lib/nominations'
 
-function RankTable({ cycleId, nominations, cycleName }) {
-  const sortedNominations = [...nominations].sort((a, b) => {
-    if (!a.rank && !b.rank) return 0
-    if (!a.rank) return 1
-    if (!b.rank) return -1
-    return a.rank - b.rank
-  })
+// Missing artwork falls back to a bare tile at the same size and radius.
+function Artwork({ src, className }) {
+  return (
+    <div className={`art-tile ${className}`}>
+      {src && (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          onError={e => { e.currentTarget.style.display = 'none' }}
+        />
+      )}
+    </div>
+  )
+}
 
-  // Helper function to get all artists from artistLinks
-  const getArtistsString = (track) => {
-    if (track?.artistLinks && track.artistLinks.length > 0) {
-      return track.artistLinks.map(link => link.artist.name).join(', ')
-    }
-    return track?.artist || 'Unknown Artist'
-  }
-
-  // Helper function to get album cover image
-  const getAlbumImage = (track) => {
-    if (track?.album?.imageUrl) {
-      return track.album.imageUrl
-    }
-    // Fallback to track image if available
-    if (track?.imageUrl) {
-      return track.imageUrl
-    }
-    return null
-  }
+export function TopThree({ nominations = [] }) {
+  const top = rankedOf(nominations).slice(0, 3)
+  if (!top.length) return null
 
   return (
-    <div className="billboard-container">
-      <div className="billboard-header">
-        <h2 className="billboard-title">{cycleName} Chart</h2>
-        <div className="billboard-date">
-          {nominations.length} nominations
-        </div>
-      </div>
-
-      <div className="table-container">
-        <div className="table-header">
-          <div className="table-header-row">
-            <div className="col-position">POSITION</div>
-            <div className="col-song">SONG</div>
-            <div className="col-artist">ARTIST</div>
-            <div className="col-album">ALBUM</div>
+    <div className="top3-grid">
+      {top.map(nom => (
+        <article key={nom.id} className="top3-card">
+          <div className="top3-art art-tile">
+            {getAlbumImage(nom.track) && (
+              <img
+                src={getAlbumImage(nom.track)}
+                alt=""
+                loading="lazy"
+                onError={e => { e.currentTarget.style.display = 'none' }}
+              />
+            )}
+            <span className={`top3-rank ${nom.rank === 1 ? 'is-first' : ''}`}>
+              {nom.rank}
+            </span>
           </div>
-        </div>
+          <div>
+            <div className="top3-title">{nom.track?.title || nom.trackId}</div>
+            <div className="top3-artist">{getArtistsString(nom.track)}</div>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
 
-        <div className="table-body">
-          {sortedNominations.length > 0 ? (
-            sortedNominations.map((nomination, index) => (
-                <div key={nomination.id} className="table-row">
-                  <div className="col-position">
-                    <div className="position-badge">
-                      {nomination.rank || (index + 1)}
-                    </div>
-                  </div>
-                  
-                  <div className="col-song">
-                    <div className="album-art">
-                      <img 
-                        src={getAlbumImage(nomination.track)} 
-                        className="album-cover-image"
-                      />
-                    </div>
-                    <div className="song-details">
-                      <div className="song-title-table">
-                        {nomination.track?.title || nomination.trackId}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="col-artist">
-                    {getArtistsString(nomination.track)}
-                  </div>
-                  
-                  <div className="col-album">
-                    {nomination.track?.album?.title || '—'}
-                  </div>
-                </div>
-              )
-            )
-          ) : (
-            <div className="empty-state">
-              No nominations yet. Add some tracks to get started!
-            </div>
-          )}
-        </div>
+function UnrankedWell({ nominations = [] }) {
+  const unranked = unrankedOf(nominations)
+  if (!unranked.length) return null
+
+  return (
+    <div className="unranked-well">
+      <div className="unranked-head">
+        <h3 className="unranked-label">Not yet ranked</h3>
+        <span className="unranked-note">
+          {unranked.length} {unranked.length === 1 ? 'nomination' : 'nominations'} with no position
+        </span>
+      </div>
+      <div className="unranked-pills">
+        {unranked.map(nom => (
+          <div key={nom.id} className="unranked-pill">
+            <Artwork src={getAlbumImage(nom.track)} className="unranked-thumb" />
+            <span className="unranked-title">{nom.track?.title || nom.trackId}</span>
+            <span className="unranked-artist">{getArtistsString(nom.track)}</span>
+          </div>
+        ))}
       </div>
     </div>
   )
 }
 
-export default RankTable
+/**
+ * The chart card. `variant="home"` drops the first three (they render as top-3
+ * cards above it) and keeps every rank numeral in accent; `variant="full"` shows
+ * every ranked row with only #1 in accent. Unranked nominations are never given
+ * a position — they render in the well underneath.
+ */
+export default function RankTable({
+  nominations = [],
+  variant = 'full',
+  showUnranked = true,
+}) {
+  const ranked = rankedOf(nominations)
+  const rows = variant === 'home' ? ranked.slice(3) : ranked
+
+  return (
+    <>
+      <div className="chart-card">
+        <div className="chart-grid chart-head">
+          <div>Pos</div>
+          <div>Song</div>
+          <div className="chart-artist">Artist</div>
+          <div className="chart-album">Album</div>
+        </div>
+
+        {rows.length > 0 ? (
+          rows.map(nom => (
+            <div key={nom.id} className="chart-grid chart-row">
+              <div className={`chart-rank ${variant === 'home' || nom.rank === 1 ? 'is-accent' : ''}`}>
+                {nom.rank}
+              </div>
+              <div className="chart-song">
+                <Artwork src={getAlbumImage(nom.track)} className="chart-thumb" />
+                <div className="chart-song-text">
+                  <div className="chart-title">{nom.track?.title || nom.trackId}</div>
+                  <div className="chart-song-sub">{getArtistsString(nom.track)}</div>
+                </div>
+              </div>
+              <div className="chart-artist">{getArtistsString(nom.track)}</div>
+              <div className="chart-album">{nom.track?.album?.title || '—'}</div>
+            </div>
+          ))
+        ) : (
+          <div className="chart-empty">
+            {ranked.length > 0
+              ? 'Every ranked nomination is in the top 3.'
+              : 'Nothing ranked yet.'}
+          </div>
+        )}
+      </div>
+
+      {showUnranked && <UnrankedWell nominations={nominations} />}
+    </>
+  )
+}

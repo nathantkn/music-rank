@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import RankTable from '../components/RankTable'
+import { rankedOf, unrankedOf } from '../lib/nominations'
+import Breadcrumb from '../components/Breadcrumb'
 import '../styles/CyclesDetail.css'
 import CycleStats from '../components/CycleStats'
 
@@ -8,15 +10,17 @@ export default function CyclesDetail() {
     const navigate = useNavigate()
     const cycleId = window.location.pathname.split('/').pop()
     const [selectedCycle, setSelectedCycle] = useState(null)
+    const [activeCycle, setActiveCycle] = useState(null)
     const [nominations, setNominations] = useState([])
     const [loading, setLoading] = useState(true)
     const [isEditingName, setIsEditingName] = useState(false)
     const [editedName, setEditedName] = useState('')
+    const [confirmingActive, setConfirmingActive] = useState(false)
 
     // Fetch cycle data when component mounts
     useEffect(() => {
         if (!cycleId) return
-        
+
         setLoading(true)
         fetch(`/api/cycles`)
             .then(r => r.json())
@@ -27,6 +31,8 @@ export default function CyclesDetail() {
                 } else {
                     console.error('Cycle not found')
                 }
+                // Same response tells us which cycle a promotion would demote.
+                setActiveCycle(cycles.find(c => c.isActive) || null)
                 setLoading(false)
             })
             .catch(err => {
@@ -38,7 +44,7 @@ export default function CyclesDetail() {
     // Fetch nominations when cycle is loaded
     useEffect(() => {
         if (!selectedCycle) return
-        
+
         fetch(`/api/cycles/${selectedCycle.id}/nominations`)
             .then(r => r.json())
             .then(setNominations)
@@ -51,15 +57,17 @@ export default function CyclesDetail() {
             const res = await fetch(`/api/cycles/${selectedCycle.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    name: selectedCycle.name, 
-                    isActive: true 
+                body: JSON.stringify({
+                    name: selectedCycle.name,
+                    isActive: true
                 })
             })
-            
+
             if (res.ok) {
                 const updatedCycle = await res.json()
                 setSelectedCycle(updatedCycle)
+                setActiveCycle(updatedCycle)
+                setConfirmingActive(false)
             } else {
                 console.error('Failed to make cycle active')
             }
@@ -79,17 +87,17 @@ export default function CyclesDetail() {
             cancelNameEdit()
             return
         }
-        
+
         try {
             const res = await fetch(`/api/cycles/${selectedCycle.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    name: editedName.trim(), 
-                    isActive: selectedCycle.isActive 
+                body: JSON.stringify({
+                    name: editedName.trim(),
+                    isActive: selectedCycle.isActive
                 })
             })
-            
+
             if (res.ok) {
                 const updatedCycle = await res.json()
                 setSelectedCycle(updatedCycle)
@@ -120,94 +128,113 @@ export default function CyclesDetail() {
     }
 
     if (loading) {
-        return <div className="loading-state">Loading cycle...</div>
+        return <div className="detail-state">Loading cycle…</div>
     }
 
     if (!selectedCycle) {
         return (
-            <div className="empty-state">
-                <p>Cycle not found</p>
-                <button onClick={() => navigate('/cycles')}>Back to Cycles</button>
+            <div className="detail-state">
+                <p className="detail-state-text">That cycle doesn’t exist.</p>
+                <button className="btn-ghost" onClick={() => navigate('/cycles')}>
+                    Back to cycles
+                </button>
             </div>
         )
     }
 
+    const rankedCount = rankedOf(nominations).length
+    const unrankedCount = unrankedOf(nominations).length
+
     return (
-        // <>
-            <div className="cycles-detail">
-                <div className="cycle-header">
-                    <div className="cycle-info">
-                        {isEditingName ? (
-                            <div className="name-edit-container">
+        <>
+            <Breadcrumb cycleId={selectedCycle.id} cycleName={selectedCycle.name} />
+
+            <section className="cycles-detail">
+                <div className="detail-head">
+                    <div>
+                        <div className="detail-title-row">
+                            {isEditingName ? (
                                 <input
                                     type="text"
                                     value={editedName}
                                     onChange={(e) => setEditedName(e.target.value)}
                                     onKeyDown={handleNameKeyPress}
                                     onBlur={saveNameEdit}
-                                    className="name-edit-input"
+                                    className="detail-title-input"
+                                    aria-label="Cycle name"
                                     autoFocus
                                 />
-                            </div>
-                        ) : (
-                            <div className="cycle-title-container">
-                                <h2>{selectedCycle.name}</h2>
-                                <button 
-                                    className="edit-name-btn"
-                                    onClick={startEditingName}
-                                    title="Edit cycle name"
-                                >
-                                    ✏️
-                                </button>
-                            </div>
-                        )}
-                        {selectedCycle.isActive && <span className="active-badge">ACTIVE</span>}
+                            ) : (
+                                <>
+                                    <h1 className="detail-title">{selectedCycle.name}</h1>
+                                    <button
+                                        className="icon-btn"
+                                        onClick={startEditingName}
+                                        title="Rename cycle"
+                                    >
+                                        ✎
+                                    </button>
+                                    {selectedCycle.isActive && <span className="chip-active">Active</span>}
+                                </>
+                            )}
+                        </div>
+                        <p className="detail-counts">
+                            {nominations.length} {nominations.length === 1 ? 'nomination' : 'nominations'}
+                            {' · '}{rankedCount} ranked{' · '}{unrankedCount} unranked
+                        </p>
                     </div>
-                    
-                    <div className="cycle-actions">
-                        {!selectedCycle.isActive && (
-                            <button 
-                                className="make-active-btn"
-                                onClick={makeActive}
-                            >
-                                Make Active
-                            </button>
-                        )}
-                        
+
+                    <div className="detail-actions">
                         {selectedCycle.isActive && (
-                            <button 
-                                className="edit-nominations-btn"
+                            <button
+                                className="btn-accent"
                                 onClick={() => navigate(`/cycles/${selectedCycle.id}/edit`)}
                             >
-                                Edit Nominations
+                                Edit rankings
                             </button>
                         )}
-                        
-                        <button 
-                            className="back-btn"
-                            onClick={() => navigate('/cycles')}
-                        >
-                            Back to Cycles
-                        </button>
-                    {/* </div> */}
-                </div>
-            </div>
 
-            {!nominations || nominations.length === 0 ? (
-                <div className="empty-state">
-                    No nominations for this cycle yet. 
-                    {selectedCycle.isActive && (
-                        <span> Click "Edit Nominations" to add some tracks!</span>
-                    )}
-                </div>
-            ) : (
-                <>
-                    <CycleStats cycleId={selectedCycle.id} isActive={selectedCycle.isActive} />
-                    <div className="content">
-                        <RankTable cycleId={selectedCycle.id} nominations={nominations} cycleName={selectedCycle.name} />
+                        {!selectedCycle.isActive && (
+                            confirmingActive ? (
+                                <div className="confirm-inline">
+                                    <span className="confirm-copy">
+                                        {activeCycle
+                                            ? `Make ${selectedCycle.name} active? ${activeCycle.name} stops being the active cycle.`
+                                            : `Make ${selectedCycle.name} the active cycle?`}
+                                    </span>
+                                    <button className="btn-accent" onClick={makeActive}>Make active</button>
+                                    <button className="btn-ghost" onClick={() => setConfirmingActive(false)}>
+                                        Cancel
+                                    </button>
+                                </div>
+                            ) : (
+                                <button className="btn-accent" onClick={() => setConfirmingActive(true)}>
+                                    Make active
+                                </button>
+                            )
+                        )}
+
+                        <button className="btn-ghost" onClick={() => navigate('/cycles')}>
+                            Back to cycles
+                        </button>
                     </div>
-                </>
-            )}
-        </div>
+                </div>
+
+                <CycleStats
+                    cycleId={selectedCycle.id}
+                    isActive={selectedCycle.isActive}
+                    nominations={nominations}
+                />
+
+                {nominations.length === 0 ? (
+                    <div className="detail-empty">
+                        No nominations in this cycle yet.
+                        {selectedCycle.isActive && ' Add tracks from Nominate, then rank them here.'}
+                    </div>
+                ) : (
+                    <RankTable nominations={nominations} />
+                )}
+            </section>
+        </>
     )
 }

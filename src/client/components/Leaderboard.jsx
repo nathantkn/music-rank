@@ -1,77 +1,53 @@
-import { useEffect, useState } from 'react';
 import '../styles/Leaderboard.css';
 
-export default function Leaderboard({ metric, title, value }) {
-    const [rows, setRows] = useState(null);
-    const [loading, setLoading] = useState(true);
+const BOARD_ROWS = 20;
 
-    useEffect(() => {
-        async function fetchData() {
-            setLoading(true);
+/** Durations render as m:ss — never raw milliseconds. */
+export function formatValue(value, format) {
+    if (format !== 'duration') return value;
+    const ms = Number(value);
+    if (!Number.isFinite(ms)) return value;
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
 
-            try {
-                const res = await fetch(`/api/leaderboards/${metric}`);
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text || `HTTP ${res.status}`);
-                }
-                const data = await res.json();
-                setRows(data);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        }
-        
-        fetchData();
-    }, [metric]);
-
+export default function Leaderboard({ rows, unit, format, loading }) {
     if (loading) {
-        return (
-            <div className="leaderboard-container">
-                <h2 className="leaderboard-header">{title}</h2>
-                <div className="leaderboard-loading">
-                    <div className="loading-spinner"></div>
-                    Loading {title}...
-                </div>
-            </div>
-        );
+        return <div className="board-body board-muted board-loading">Loading…</div>;
+    }
+
+    if (!rows || rows.length === 0) {
+        return <div className="board-body board-muted board-loading">Nothing on this board yet.</div>;
     }
 
     return (
-        <div className="leaderboard-container">
-            <table className="leaderboard-table">
-                <thead>
-                    <tr>
-                        <th className="rank-header">POSITION</th>
-                        <th className="name-header">Name</th>
-                        <th className="value-header">{value}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows && rows.map((row, i) => (
-                        <tr key={row.subjectId}>
-                            <td className="rank-cell">{i + 1}</td>
-                            <td className="name-cell">
-                                <div className="name-with-image">
-                                    {row.subjectImage ? (
-                                        <img
-                                            src={row.subjectImage}
-                                            alt={row.subjectName}
-                                            className="artist-image"
-                                        />
-                                    ) : (
-                                        <div className="artist-placeholder"></div>
-                                    )}
-                                    <span>{row.subjectName}</span>
-                                </div>
-                            </td>
-                            <td className="value-cell">{row.value}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className="board-body">
+            <div className="board-grid board-row-head">
+                <div>Pos</div>
+                <div>Name</div>
+                <div>{unit}</div>
+            </div>
+
+            {rows.slice(0, BOARD_ROWS).map((row, i) => (
+                <div key={row.subjectId ?? `${row.subjectName}-${i}`} className="board-grid board-row">
+                    <span className={`board-pos ${i === 0 ? 'is-first' : ''}`}>{i + 1}</span>
+                    <div className="board-name">
+                        <div className="board-art art-tile">
+                            {row.subjectImage && (
+                                <img
+                                    src={row.subjectImage}
+                                    alt=""
+                                    loading="lazy"
+                                    onError={e => { e.currentTarget.style.display = 'none' }}
+                                />
+                            )}
+                        </div>
+                        <span className="board-name-text">{row.subjectName}</span>
+                    </div>
+                    <span className="board-value">{formatValue(row.value, format)}</span>
+                </div>
+            ))}
         </div>
     );
 }

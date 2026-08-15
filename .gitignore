@@ -37,5 +37,7 @@ prisma/*.db-journal
 /src/server/scripts/client_secret.json
 /src/server/scripts/quickstart.js
 
+/design
+
 DEPLOYMENT.md
 *.sql

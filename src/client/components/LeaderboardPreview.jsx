@@ -1,21 +1,24 @@
 import { useEffect, useState } from 'react';
-import Leaderboard from './Leaderboard.jsx';
+import Leaderboard, { formatValue } from './Leaderboard.jsx';
 import '../styles/LeaderboardPreview.css';
 
-function LeaderboardPreview({ 
-    metric, 
-    title, 
-    isExpanded, 
+function LeaderboardPreview({
+    index,
+    metric,
+    title,
+    unit,
+    format,
+    isExpanded,
     onToggle,
-    value,
 }) {
-    const [firstPlace, setFirstPlace] = useState(null);
+    // One fetch per board — the collapsed preview and the expanded table share it
+    const [rows, setRows] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        async function fetchFirstPlace() {
+        async function fetchBoard() {
             setLoading(true);
-            
+
             try {
                 const res = await fetch(`/api/leaderboards/${metric}`);
                 if (!res.ok) {
@@ -23,60 +26,61 @@ function LeaderboardPreview({
                     throw new Error(text || `HTTP ${res.status}`);
                 }
                 const data = await res.json();
-                setFirstPlace(data && data.length > 0 ? data[0] : null);
+                setRows(data);
             } catch (err) {
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         }
-        
-        fetchFirstPlace();
+
+        fetchBoard();
     }, [metric]);
 
-    const handleToggle = () => {
-        onToggle();
-    }
+    const firstPlace = rows && rows.length > 0 ? rows[0] : null;
 
     return (
-        <div 
-            className={`preview-box ${isExpanded ? 'expanded' : ''}`} 
-            onClick={handleToggle}
-        >
-            <div className="preview-content">
-                <div className="preview-left">
-                    <h3 className="preview-title">{title}</h3>
+        <div className={`board ${isExpanded ? 'expanded' : ''}`}>
+            {/* The header is the only click target */}
+            <div className="board-head" onClick={onToggle}>
+                <div className="board-head-left">
+                    <span className="board-index">{String(index).padStart(2, '0')}</span>
+                    <h3 className="board-title">{title}</h3>
                 </div>
-                
-                <div className="preview-right">
+
+                <div className="board-leader">
                     {loading ? (
-                        <div className="preview-loading">Loading...</div>
-                        ) : firstPlace ? (
+                        <span className="board-muted">Loading…</span>
+                    ) : firstPlace ? (
                         <>
-                            <div className="winner-info">
-                                <div className="preview-winner">
-                                    <span className="winner-name">{firstPlace.subjectName}</span>
+                            <div className="board-leader-text">
+                                <div className="board-leader-name">{firstPlace.subjectName}</div>
+                                <div className="board-leader-value">
+                                    {formatValue(firstPlace.value, format)}
+                                    {format === 'duration' ? '' : ` ${unit.toLowerCase()}`}
                                 </div>
-                                <div className="winner-value">{firstPlace.value}</div>
                             </div>
-                            {firstPlace.subjectImage && (
-                                <img 
-                                    src={firstPlace.subjectImage} 
-                                    alt={firstPlace.subjectName}
-                                    className="winner-image"
-                                />
-                            )}
+                            <div className="board-leader-art art-tile">
+                                {firstPlace.subjectImage && (
+                                    <img
+                                        src={firstPlace.subjectImage}
+                                        alt=""
+                                        loading="lazy"
+                                        onError={e => { e.currentTarget.style.display = 'none' }}
+                                    />
+                                )}
+                            </div>
                         </>
-                        ) : (
-                            <div className="preview-loading">No data</div>
+                    ) : (
+                        <span className="board-muted">No data</span>
                     )}
                 </div>
+
+                <span className="board-chevron">{isExpanded ? '−' : '+'}</span>
             </div>
 
             {isExpanded && (
-                <div className="expanded-content">
-                    <Leaderboard metric={metric} title={title} value={value} />
-                </div>
+                <Leaderboard rows={rows} unit={unit} format={format} loading={loading} />
             )}
         </div>
     );

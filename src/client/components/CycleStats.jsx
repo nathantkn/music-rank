@@ -1,15 +1,72 @@
 import { useState, useEffect } from 'react'
 import '../styles/CycleStats.css'
+import { getArtistsString, getAlbumImage } from '../lib/nominations'
 
-export default function CycleStats({ cycleId, isActive }) {
+// "9 Aug 2026, 21:14"
+function formatComputedAt(value) {
+    if (!value) return null
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return null
+    return date.toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+}
+
+// "6 nominations, best at #4" — derived from the cycle's nominations, no extra fetch.
+function artistSubline(artist, nominations) {
+    const mine = nominations.filter(nom =>
+        nom.track?.artistLinks?.some(link => link.artist.id === artist.id)
+    )
+    const count = `${mine.length} ${mine.length === 1 ? 'nomination' : 'nominations'}`
+    const best = mine
+        .filter(nom => nom.rank != null)
+        .sort((a, b) => a.rank - b.rank)[0]
+    return best ? `${count}, best at #${best.rank}` : count
+}
+
+function AwardCard({ label, image, name, sub }) {
+    return (
+        <article className="award-card">
+            <div className="award-label">{label}</div>
+            <div className="award-body">
+                <div className="award-art art-tile">
+                    {image && (
+                        <img
+                            src={image}
+                            alt=""
+                            onError={e => { e.currentTarget.style.display = 'none' }}
+                        />
+                    )}
+                </div>
+                <div className="award-text">
+                    {name ? (
+                        <>
+                            <div className="award-name">{name}</div>
+                            <div className="award-sub">{sub}</div>
+                        </>
+                    ) : (
+                        <div className="award-unset">Not set</div>
+                    )}
+                </div>
+            </div>
+        </article>
+    )
+}
+
+export default function CycleStats({ cycleId, isActive, nominations = [] }) {
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
 
     useEffect(() => {
         if (!cycleId) return
-        
+
         setLoading(true)
-        
+
         fetch(`/api/cycles/${cycleId}/stats`)
             .then(async (res) => {
                 if (res.status === 404) {
@@ -32,12 +89,13 @@ export default function CycleStats({ cycleId, isActive }) {
     const computeStats = async () => {
         try {
             setLoading(true)
+            setError(null)
             const res = await fetch(`/api/cycles/${cycleId}/stats`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ bestNewArtistId: stats?.bestNewArtist?.id || null})
             })
-            
+
             if (res.ok) {
                 // Refetch the stats after computing
                 const statsRes = await fetch(`/api/cycles/${cycleId}/stats`)
@@ -58,114 +116,59 @@ export default function CycleStats({ cycleId, isActive }) {
 
     if (loading) {
         return (
-            <div className="cycle-stats">
-                <div className="stats-loading">Computing cycle statistics...</div>
+            <div className="awards-strip">
+                <span className="awards-computed">Computing cycle statistics…</span>
             </div>
         )
     }
 
+    // No snapshot at all — the strip becomes the empty state.
     if (!stats) {
         return (
-            <div className="cycle-stats">
-                <div className="stats-empty">
-                    <p>No stats computed for this cycle yet.</p>
-                    {isActive && (
-                        <button onClick={computeStats} className="compute-stats-btn">
-                            Compute Stats
-                        </button>
-                    )}
-                </div>
+            <div className="awards-strip">
+                <span className="awards-computed">
+                    {error || 'No awards computed for this cycle yet.'}
+                </span>
+                {isActive && (
+                    <button className="btn-outline" onClick={computeStats}>
+                        Compute stats
+                    </button>
+                )}
             </div>
         )
     }
 
+    const computedAt = formatComputedAt(stats.computedAt)
+
     return (
-        <div className="cycle-stats">            
-            <div className="stats-grid">
-                {/* Track of the Cycle */}
-                {stats.trackOfCycle && (
-                    <div className="stat-card track-of-cycle">
-                        <div className="stat-header">
-                            <h4>Track of the Cycle</h4>
-                        </div>
-                        <div className="stat-content">
-                            {stats.trackOfCycle.album?.imageUrl && (
-                                <img 
-                                    src={stats.trackOfCycle.album.imageUrl} 
-                                    alt={`${stats.trackOfCycle.title} cover`}
-                                    className="track-artwork"
-                                />
-                            )}
-                            <div className="track-info">
-                                <div className="track-title">{stats.trackOfCycle.title}</div>
-                                <div className="track-artist">{stats.trackOfCycle.artists}</div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Artist of the Cycle */}
-                <div className="stat-card artist-of-cycle">
-                    <div className="stat-header">
-                        <h4>Artist of the Cycle</h4>
-                    </div>
-                    <div className="stat-content">
-                        {stats.artistOfCycle ? (
-                            <>
-                                {stats.artistOfCycle.imageUrl && (
-                                    <img 
-                                        src={stats.artistOfCycle.imageUrl} 
-                                        alt={`${stats.artistOfCycle.name} profile`}
-                                        className="artist-photo"
-                                    />
-                                )}
-                                <div className="artist-info">
-                                    <div className="artist-name">{stats.artistOfCycle.name}</div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="stat-placeholder">
-                                <div className="placeholder-icon">👤</div>
-                                <div className="placeholder-text">No artist selected yet</div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Best New Artist */}
-                <div className="stat-card best-new-artist">
-                    <div className="stat-header">
-                        <h4>Best New Artist</h4>
-                    </div>
-                    <div className="stat-content">
-                        {stats.bestNewArtist ? (
-                            <>
-                                {stats.bestNewArtist.imageUrl && (
-                                    <img 
-                                        src={stats.bestNewArtist.imageUrl} 
-                                        alt={`${stats.bestNewArtist.name} profile`}
-                                        className="artist-photo"
-                                    />
-                                )}
-                                <div className="artist-info">
-                                    <div className="artist-name">{stats.bestNewArtist.name}</div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="stat-placeholder">
-                                <div className="placeholder-text">No best new artist was selected.</div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+        <div className="awards">
+            <div className="awards-grid">
+                <AwardCard
+                    label="Track of the Cycle"
+                    image={getAlbumImage(stats.trackOfCycle)}
+                    name={stats.trackOfCycle?.title}
+                    sub={stats.trackOfCycle && getArtistsString(stats.trackOfCycle)}
+                />
+                <AwardCard
+                    label="Artist of the Cycle"
+                    image={stats.artistOfCycle?.imageUrl}
+                    name={stats.artistOfCycle?.name}
+                    sub={stats.artistOfCycle && artistSubline(stats.artistOfCycle, nominations)}
+                />
+                <AwardCard
+                    label="Best New Artist"
+                    image={stats.bestNewArtist?.imageUrl}
+                    name={stats.bestNewArtist?.name}
+                    sub="picked by hand"
+                />
             </div>
 
-            <div className="stats-footer">
-                <div className="stats-computed">
-                    Last updated: {new Date(stats.computedAt).toLocaleDateString()}
-                </div>
-                <button onClick={computeStats} className="recompute-stats-btn">
-                    Recompute Stats
+            <div className="awards-strip">
+                <span className="awards-computed">
+                    {error || (computedAt ? `Awards computed ${computedAt}` : 'Awards computed')}
+                </span>
+                <button className="btn-outline" onClick={computeStats}>
+                    Recompute
                 </button>
             </div>
         </div>

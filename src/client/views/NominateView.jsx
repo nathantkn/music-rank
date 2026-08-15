@@ -1,6 +1,22 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import '../styles/NominateView.css'
+import { useToast } from '../components/Toast'
+
+// "7 Jun 2024" — falls back to whatever the API gave us
+function formatReleaseDate(value) {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function formatDuration(durationMs) {
+  if (!durationMs) return ''
+  const minutes = Math.floor(durationMs / 60000)
+  const seconds = Math.floor((durationMs % 60000) / 1000)
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
 
 export default function NominateView() {
   const [cycles, setCycles] = useState([])
@@ -8,12 +24,13 @@ export default function NominateView() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
   const [nominatedTracks, setNominatedTracks] = useState(new Set())
   const [searchMode, setSearchMode] = useState('tracks') // 'tracks' or 'albums'
   const [selectedAlbum, setSelectedAlbum] = useState(null) // For viewing album tracks
   const [albumTracks, setAlbumTracks] = useState([])
   const [isLoadingAlbum, setIsLoadingAlbum] = useState(false)
-  const navigate = useNavigate()
+  const toast = useToast()
 
   // Fetch all cycles
   useEffect(() => {
@@ -29,14 +46,35 @@ export default function NominateView() {
     setActiveCycle(active)
   }, [cycles])
 
+  // Seed the "already in this cycle" set from the cycle itself, not just this session
+  useEffect(() => {
+    if (!activeCycle) return
+
+    fetch(`/api/cycles/${activeCycle.id}/nominations`)
+      .then(r => r.json())
+      .then(nominations => {
+        setNominatedTracks(prev => {
+          const next = new Set(prev)
+          nominations.forEach(nom => {
+            // Persisted tracks carry spotifyTrackId; search results use spotifyId
+            const spotifyId = nom.track?.spotifyTrackId || nom.track?.spotifyId
+            if (spotifyId) next.add(spotifyId)
+          })
+          return next
+        })
+      })
+      .catch(console.error)
+  }, [activeCycle])
+
   // Search for songs or albums
   const performSearch = async () => {
-    if (!searchQuery.trim()) return
+    if (!searchQuery.trim() || isSearching) return
 
     setSearchResults([])
     setIsSearching(true)
+    setHasSearched(true)
     setSelectedAlbum(null) // Clear any selected album when searching
-    
+
     try {
       const endpoint = searchMode === 'albums' ? '/api/search/album' : '/api/search'
       const response = await fetch(
@@ -69,27 +107,28 @@ export default function NominateView() {
       }
     } catch (error) {
       console.error('Search failed:', error)
-      alert(`Search failed: ${error.message}`)
+      toast(`Search failed: ${error.message}`, 'warn')
     } finally {
       setIsSearching(false)
     }
   }
 
   // Fetch tracks from a selected album
-  const fetchAlbumTracks = async (albumId) => {
+  const fetchAlbumTracks = async (album) => {
     setIsLoadingAlbum(true)
     try {
-      const response = await fetch(`/api/search/album/${albumId}`)
+      const response = await fetch(`/api/search/album/${album.id}`)
       if (!response.ok) throw new Error(`Album fetch error ${response.status}`)
       const data = await response.json()
-      
+
       setSelectedAlbum({
-        id: albumId,
+        id: album.id,
         title: data.albumTitle,
         imageUrl: data.imageUrl,
-        releaseDate: data.releaseDate
+        releaseDate: data.releaseDate,
+        artist: album.artist
       })
-      
+
       // Transform tracks to match the nomination format
       const tracks = data.tracks.map(track => ({
         id: track.id,
@@ -101,21 +140,20 @@ export default function NominateView() {
         artistIds: track.artists.map(a => a.id),
         durationMs: track.durationMs
       }))
-      
+
       setAlbumTracks(tracks)
     } catch (error) {
       console.error('Failed to fetch album tracks:', error)
-      alert(`Failed to fetch album tracks: ${error.message}`)
+      toast(`Could not open that album: ${error.message}`, 'warn')
     } finally {
       setIsLoadingAlbum(false)
     }
   }
 
-
   // Nominate a track
   const nominateTrack = async (track) => {
     if (!activeCycle) {
-      alert('No active cycle found!')
+      toast('There is no active cycle to nominate into.', 'warn')
       return
     }
 
@@ -129,34 +167,35 @@ export default function NominateView() {
           rank: null
         })
       })
-      
+
       if (res.ok) {
         setNominatedTracks(prev => new Set([...prev, track.spotifyId]))
+        toast(`“${track.name}” added to ${activeCycle.name}, unranked.`)
       } else {
         const errorText = await res.text()
-        alert(`Failed to nominate track: ${errorText}`)
+        toast(`Could not nominate that track: ${errorText}`, 'warn')
       }
     } catch (error) {
       console.error('Nomination failed:', error)
-      alert('Failed to nominate track. Please try again.')
+      toast('Could not nominate that track. Please try again.', 'warn')
     }
   }
 
-  // Check if a track is nominated
-  const isTrackNominated = (trackSpotifyId) => {
-    return nominatedTracks.has(trackSpotifyId)
-  }
+  const isTrackNominated = (trackSpotifyId) => nominatedTracks.has(trackSpotifyId)
 
-  // Navigate to active cycle
-  const goToActiveCycle = () => {
-    if (activeCycle) {
-      navigate(`/cycles/${activeCycle.id}`)
-    }
+  const switchMode = (mode) => {
+    if (mode === searchMode) return
+    setSearchMode(mode)
+    setSearchResults([])
+    setHasSearched(false)
+    setSelectedAlbum(null)
+    setAlbumTracks([])
   }
 
   // Handle search on Enter key
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
+      e.preventDefault()
       performSearch()
     }
   }
@@ -167,190 +206,185 @@ export default function NominateView() {
     setAlbumTracks([])
   }
 
-  // Format duration from milliseconds to mm:ss
-  const formatDuration = (durationMs) => {
-    if (!durationMs) return ''
-    const minutes = Math.floor(durationMs / 60000)
-    const seconds = Math.floor((durationMs % 60000) / 1000)
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
+  const inCycleLabel = activeCycle ? `In ${activeCycle.name}` : 'In cycle'
 
   return (
-    <div className="nominate-view">
-      <h1 className="nominate-title">Nominate a Track</h1>
-      
-      <div className="search-section">
-        {/* Search Mode Toggle */}
-        <div className="search-mode-toggle">
-          <button 
+    <section className="nominate-view">
+      <div className="nominate-head">
+        <div>
+          <h1 className="page-title">Nominate</h1>
+          <p className="page-sub">
+            {activeCycle ? (
+              <>
+                Tracks land in <Link to={`/cycles/${activeCycle.id}`}>{activeCycle.name}</Link> unranked.
+              </>
+            ) : (
+              <>
+                No cycle is active, so nothing can be nominated yet.{' '}
+                <Link to="/cycles">Make one active</Link> first.
+              </>
+            )}
+          </p>
+        </div>
+
+        <div className="mode-pill">
+          <button
             className={`mode-button ${searchMode === 'tracks' ? 'active' : ''}`}
-            onClick={() => {
-              setSearchMode('tracks')
-              setSearchResults([])
-              setSelectedAlbum(null)
-              setAlbumTracks([])
-            }}
+            onClick={() => switchMode('tracks')}
           >
-            Search Tracks
+            Tracks
           </button>
-          <button 
+          <button
             className={`mode-button ${searchMode === 'albums' ? 'active' : ''}`}
-            onClick={() => {
-              setSearchMode('albums')
-              setSearchResults([])
-              setSelectedAlbum(null)
-              setAlbumTracks([])
-            }}
+            onClick={() => switchMode('albums')}
           >
-            Search Albums
+            Albums
           </button>
         </div>
+      </div>
 
-        <div className="search-bar">
-          <input
-            type="text"
-            className="search-input"
-            placeholder={searchMode === 'albums' ? 'Search for albums...' : 'Search for songs...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
-          />
-          <button 
-            className="search-button"
-            onClick={performSearch}
-            disabled={!searchQuery.trim() || isSearching}
-          >
-            {isSearching ? '...' : 'Search'}
+      <div className="search-bar">
+        <input
+          type="text"
+          className="search-input"
+          placeholder={searchMode === 'albums' ? 'Search albums…' : 'Search tracks…'}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+        <button
+          className="btn-accent search-button"
+          onClick={performSearch}
+          disabled={!searchQuery.trim() || isSearching}
+        >
+          {isSearching ? 'Searching…' : 'Search'}
+        </button>
+      </div>
+
+      {isSearching && (
+        <p className="results-state">Searching {searchMode}…</p>
+      )}
+
+      {selectedAlbum ? (
+        <div className="album-view">
+          <button className="btn-outline album-back" onClick={goBackToSearch}>
+            ← Back to results
           </button>
-        </div>
 
-        {/* Loading State */}
-        {isSearching && (
-          <div className="search-results">
-            <h3 className="results-title">Searching...</h3>
-            <div className="loading">
-              <div className="loading-spinner"></div>
-              <span>Searching for {searchMode}...</span>
+          <div className="album-header">
+            <div className="album-cover art-tile">
+              {selectedAlbum.imageUrl && (
+                <img
+                  src={selectedAlbum.imageUrl}
+                  alt=""
+                  onError={e => { e.currentTarget.style.display = 'none' }}
+                />
+              )}
+            </div>
+            <div>
+              <h2 className="album-title">{selectedAlbum.title}</h2>
+              <p className="album-meta">
+                {[
+                  selectedAlbum.artist,
+                  formatReleaseDate(selectedAlbum.releaseDate) &&
+                    `Released ${formatReleaseDate(selectedAlbum.releaseDate)}`,
+                  albumTracks.length > 0 &&
+                    `${albumTracks.length} ${albumTracks.length === 1 ? 'track' : 'tracks'}`,
+                ].filter(Boolean).join(' · ')}
+              </p>
             </div>
           </div>
-        )}
 
-        {/* Album View */}
-        {selectedAlbum && (
-          <div className="album-view">
-            <div className="album-header">
-              <button className="back-button" onClick={goBackToSearch}>
-                ← Back to Results
-              </button>
-              <div className="album-info">
-                {selectedAlbum.imageUrl && (
-                  <img 
-                    src={selectedAlbum.imageUrl} 
-                    alt={selectedAlbum.title}
-                    className="album-cover"
-                  />
-                )}
-                <div className="album-details">
-                  <h2 className="album-title">{selectedAlbum.title}</h2>
-                  {selectedAlbum.releaseDate && (
-                    <p className="album-release-date">Released: {selectedAlbum.releaseDate}</p>
-                  )}
-                </div>
-              </div>
+          {isLoadingAlbum ? (
+            <p className="results-state">Loading album tracks…</p>
+          ) : (
+            <div className="tracklist">
+              {albumTracks.map((track, index) => {
+                const done = isTrackNominated(track.spotifyId)
+                return (
+                  <div key={track.id} className="tracklist-row">
+                    <span className="tracklist-no">{index + 1}</span>
+                    <div className="tracklist-text">
+                      <div className="tracklist-title">{track.name}</div>
+                      <div className="tracklist-artist">{track.artist}</div>
+                    </div>
+                    <span className="tracklist-duration">{formatDuration(track.durationMs)}</span>
+                    <button
+                      className={done ? 'btn-outline is-done' : 'btn-accent nominate-button'}
+                      onClick={() => nominateTrack(track)}
+                      disabled={!activeCycle || done}
+                    >
+                      {done ? inCycleLabel : 'Nominate'}
+                    </button>
+                  </div>
+                )
+              })}
             </div>
-
-            {isLoadingAlbum ? (
-              <div className="loading">
-                <div className="loading-spinner"></div>
-                <span>Loading album tracks...</span>
+          )}
+        </div>
+      ) : (
+        !isSearching && (
+          searchResults.length > 0 ? (
+            <div>
+              <div className="results-head">
+                <h3 className="results-label">
+                  {searchMode === 'albums' ? 'Album results' : 'Track results'}
+                </h3>
+                <span className="results-rule" />
               </div>
-            ) : (
-              <div className="album-tracks">
-                <h3 className="tracks-title">Tracks</h3>
-                <div className="tracks-list">
-                  {albumTracks.map(track => (
-                    <div key={track.id} className="track-item">
-                      <div className="track-info">
-                        <div className="track-name">{track.name}</div>
-                        <div className="track-artist">{track.artist}</div>
-                        {track.durationMs && (
-                          <div className="track-duration">{formatDuration(track.durationMs)}</div>
+
+              <div className="results-list">
+                {searchResults.map(result => {
+                  const already = searchMode === 'tracks' && isTrackNominated(result.spotifyId)
+
+                  return (
+                    <div key={result.id} className="result-row">
+                      <div className="result-art art-tile">
+                        {(result.image || result.imageUrl) && (
+                          <img
+                            src={result.image || result.imageUrl}
+                            alt=""
+                            loading="lazy"
+                            onError={e => { e.currentTarget.style.display = 'none' }}
+                          />
                         )}
                       </div>
-                      <button 
-                        className={`nominate-button ${isTrackNominated(track.spotifyId) ? 'nominated' : ''}`}
-                        onClick={() => nominateTrack(track)}
-                        disabled={!activeCycle || isTrackNominated(track.spotifyId)}
-                      >
-                        {isTrackNominated(track.spotifyId) ? '✓' : 'Nominate'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+                      <div className="result-text">
+                        <div className="result-name">{result.name || result.title}</div>
+                        <div className="result-sub">
+                          {[result.artist, searchMode === 'tracks' ? result.album : null]
+                            .filter(Boolean).join(' · ')}
+                        </div>
+                      </div>
 
-        {/* Search Results */}
-        {!selectedAlbum && searchResults.length > 0 && !isSearching && (
-          <div className="search-results">
-            <h3 className="results-title">
-              {searchMode === 'albums' ? 'Album Results' : 'Track Results'}
-            </h3>
-            <div className="results-list">
-              {searchResults.map(result => (
-                <div key={result.id} className="result-item">
-                  <div className="result-image-container">
-                    {(result.image || result.imageUrl) && (
-                      <img 
-                        src={result.image || result.imageUrl} 
-                        alt={`${result.name || result.title} cover`}
-                        className="result-image"
-                      />
-                    )}
-                  </div>
-                  <div className="result-info">
-                    <div className="result-name">{result.name || result.title}</div>
-                    <div className="result-artist">{result.artist}</div>
-                    {result.album && searchMode === 'tracks' && (
-                      <div className="result-album">{result.album}</div>
-                    )}
-                  </div>
-                  {searchMode === 'albums' ? (
-                    <button 
-                      className="view-album-button"
-                      onClick={() => fetchAlbumTracks(result.id)}
-                    >
-                      View Tracks
-                    </button>
-                  ) : (
-                    <button 
-                      className={`nominate-button ${isTrackNominated(result.spotifyId) ? 'nominated' : ''}`}
-                      onClick={() => nominateTrack(result)}
-                      disabled={!activeCycle || isTrackNominated(result.spotifyId)}
-                    >
-                      {isTrackNominated(result.spotifyId) ? '✓' : 'Nominate'}
-                    </button>
-                  )}
-                </div>
-              ))}
+                      {searchMode === 'albums' ? (
+                        <button
+                          className="btn-outline"
+                          onClick={() => fetchAlbumTracks(result)}
+                        >
+                          View tracks
+                        </button>
+                      ) : already ? (
+                        <span className="chip-in-cycle">{inCycleLabel}</span>
+                      ) : (
+                        <button
+                          className="btn-accent nominate-button"
+                          onClick={() => nominateTrack(result)}
+                          disabled={!activeCycle}
+                        >
+                          Nominate
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-      
-      <div className="bottom-section">
-        {activeCycle ? (
-          <button className="active-cycle-button" onClick={goToActiveCycle}>
-            Go to Active Cycle: {activeCycle.name}
-          </button>
-        ) : (
-          <div className="no-active-cycle">
-            No active cycle found
-          </div>
-        )}
-      </div>
-    </div>
+          ) : hasSearched && (
+            <p className="results-state">Nothing matched “{searchQuery}”.</p>
+          )
+        )
+      )}
+    </section>
   )
 }

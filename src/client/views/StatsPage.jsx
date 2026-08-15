@@ -6,83 +6,77 @@ const leaderboardConfigs = [
     {
         id: 'track-of-cycle',
         title: 'Most Track of the Cycle',
-        value: 'Times'
+        unit: 'Times'
     },
     {
         id: 'artist-of-cycle',
         title: 'Most Artist of the Cycle',
-        value: 'Times'
+        unit: 'Times'
     },
     {
         id: 'most-nominations',
         title: 'Most Total Nominations',
-        value: 'Nominations'
+        unit: 'Nominations'
     },
     {
         id: 'most-songs-in-cycle',
         title: 'Most Nominations in a Cycle',
-        value: 'Nominations'
+        unit: 'Nominations'
     },
     {
         id: 'longest-songs',
         title: 'Longest Songs Ever Nominated',
-        value: 'Time'
+        unit: 'Time',
+        // Values come back as milliseconds — never show them raw
+        format: 'duration'
     },
     {
         id: 'most-songs-nominated-album',
         title: 'Most Album Nominations',
-        value: 'Nominations'
+        unit: 'Nominations'
     },
     {
         id: 'artist-cycle-counts',
         title: 'Most Cycle Appearances',
-        value: 'Cycles'
+        unit: 'Cycles'
     },
     {
         id: 'artist-cycle-streaks',
         title: 'Longest Artist Cycle Appearances Streak',
-        value: 'Cycles'
+        unit: 'Cycles'
     },
     {
         id: 'album-track-of-cycle',
         title: 'Albums with Most Track of the Cycle Wins',
-        value: 'Tracks'
+        unit: 'Tracks'
     },
-
 ];
 
 export default function StatsPage() {
-    const [expandedLeaderboard, setExpandedLeaderboard] = useState(null);
-
-    const handleToggle = (leaderboardId) => {
-        setExpandedLeaderboard(
-            expandedLeaderboard === leaderboardId ? null : leaderboardId
-        );
-    };
+    // True accordion — opening one closes the others
+    const [openBoard, setOpenBoard] = useState(null);
 
     return (
-        <div className="stats-page">
-            <div className="stats-container">
-                <div className="stats-header">
-                    <h1 className="stats-title">Leaderboards & Records</h1>
-                    <p className="stats-subtitle">
+        <section className="stats-page">
+            <h1 className="page-title">Records</h1>
+            <p className="page-sub stats-sub">
+                Nine all-time leaderboards across every cycle ever run.
+            </p>
 
-                    </p>
-                </div>
-
-                <div className="leaderboard-previews">
-                    {leaderboardConfigs.map((config) => (
-                        <LeaderboardPreview
-                            key={config.id}
-                            metric={config.id}
-                            title={config.title}
-                            isExpanded={expandedLeaderboard === config.id}
-                            onToggle={() => handleToggle(config.id)}
-                            value={config.value}
-                        />
-                    ))}
-                </div>
+            <div className="stats-list">
+                {leaderboardConfigs.map((config, index) => (
+                    <LeaderboardPreview
+                        key={config.id}
+                        index={index + 1}
+                        metric={config.id}
+                        title={config.title}
+                        unit={config.unit}
+                        format={config.format}
+                        isExpanded={openBoard === config.id}
+                        onToggle={() => setOpenBoard(openBoard === config.id ? null : config.id)}
+                    />
+                ))}
             </div>
-        </div>
+        </section>
     );
 }

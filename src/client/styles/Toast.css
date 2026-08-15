@@ -1,0 +1,72 @@
+/* Non-blocking feedback — replaces every alert() and confirm() */
+
+.toast-stack {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 380px;
+  padding: 14px 18px;
+  border-radius: var(--r-row);
+  background: #141C2A;
+  border: 1px solid var(--accent);
+  box-shadow: var(--shadow-toast);
+  animation: toastIn 0.2s ease-out;
+  pointer-events: auto;
+}
+
+.toast-warn {
+  border-color: var(--warn-border);
+}
+
+.toast-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--accent);
+}
+
+.toast-warn .toast-dot {
+  background: var(--warn);
+}
+
+.toast-message {
+  font-size: 14px;
+  color: #E8EDF5;
+}
+
+.toast-close {
+  margin-left: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-4);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  color: var(--text);
+}
+
+@media (max-width: 760px) {
+  .toast-stack {
+    right: var(--gutter-narrow);
+    left: var(--gutter-narrow);
+    bottom: var(--gutter-narrow);
+  }
+
+  .toast {
+    max-width: none;
+  }
+}

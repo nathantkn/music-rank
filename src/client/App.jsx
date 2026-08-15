@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import './App.css'
-import RankTable from './components/RankTable'
+import RankTable, { TopThree } from './components/RankTable'
+import { rankedOf } from './lib/nominations'
 
 // Main App Component
 export default function App() {
@@ -162,83 +164,96 @@ export default function App() {
 
   const cards = getCardData()
   const currentCard = cards[currentCardIndex]
+  const rankedCount = rankedOf(nominations).length
 
   return (
     <>
-      <div className="hero-section">
+      <section className="hero">
         {stats && currentCard ? (
           <>
-            <button 
-              className="nav-arrow nav-arrow-left"
-              onClick={() => handleCardChange((currentCardIndex - 1 + 6) % 6)}
-            >
-              ←
-            </button>
-            
-            <div className="hero-content">
-              <div className="card-indicator">
-                <span className="card-type">{currentCard.type}</span>
-              </div>
-              <h1 className="hero-title">
-                {currentCard.text}
-              </h1>
-            </div>
-            
-            <div className="hero-image">
+            <div className="hero-art art-tile">
               {currentCard.image ? (
-                <img 
-                  src={currentCard.image} 
-                  alt={`${currentCard.title}`}
-                  className="hero-image-content"
+                <img
+                  src={currentCard.image}
+                  alt=""
+                  onError={e => { e.currentTarget.style.display = 'none' }}
                 />
               ) : (
-                <div className="hero-image-fallback">
-                  {currentCard.icon}
-                </div>
+                <span className="hero-art-label">Artwork</span>
               )}
             </div>
-            
-            <button 
-              className="nav-arrow nav-arrow-right"
-              onClick={() => handleCardChange((currentCardIndex + 1) % 6)}
-            >
-              →
-            </button>
-            <div className="card-dots">
-              {cards.map((_, index) => (
-                <button
-                  key={index}
-                  className={`dot ${index === currentCardIndex ? 'active' : ''}`}
-                  onClick={() => handleCardChange(index)}
-                />
-              ))}
+
+            <div className="hero-body">
+              <span className="hero-eyebrow">{currentCard.type}</span>
+              <h1 className="hero-title">{currentCard.text}</h1>
+
+              <div className="hero-controls">
+                <div className="hero-arrows">
+                  <button
+                    className="hero-arrow"
+                    aria-label="Previous fact"
+                    onClick={() => handleCardChange((currentCardIndex - 1 + cards.length) % cards.length)}
+                  >
+                    ←
+                  </button>
+                  <button
+                    className="hero-arrow"
+                    aria-label="Next fact"
+                    onClick={() => handleCardChange((currentCardIndex + 1) % cards.length)}
+                  >
+                    →
+                  </button>
+                </div>
+                <div className="hero-dots">
+                  {cards.map((card, index) => (
+                    <button
+                      key={card.type}
+                      className={`hero-dot ${index === currentCardIndex ? 'active' : ''}`}
+                      aria-label={card.type}
+                      onClick={() => handleCardChange(index)}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </>
         ) : (
-          <div className="hero-loading">
-            <div className="loading-content">
-              <div className="loading-skeleton loading-title"></div>
-              <div className="loading-skeleton loading-text"></div>
-              <div className="loading-skeleton loading-text short"></div>
+          <>
+            <div className="hero-art art-tile" />
+            <div className="hero-body">
+              <div className="skeleton skeleton-eyebrow" />
+              <div className="skeleton skeleton-line" />
+              <div className="skeleton skeleton-line short" />
             </div>
-            <div className="loading-image">
-              <div className="loading-spinner small"></div>
-            </div>
-          </div>
+          </>
         )}
-      </div>
+      </section>
 
-      <div className="content">
+      <section className="home-section">
         {selectedCycle ? (
-          <RankTable 
-            cycleId={selectedCycle.id}
-            nominations={nominations}
-            cycleName={selectedCycle.name}
-          />
+          <>
+            <div className="home-head">
+              <div className="home-head-title">
+                <h2>{selectedCycle.name}</h2>
+                {selectedCycle.isActive && <span className="chip-active">Active</span>}
+              </div>
+              <div className="home-head-meta">
+                <span className="home-counts">
+                  {nominations.length} {nominations.length === 1 ? 'nomination' : 'nominations'} · {rankedCount} ranked
+                </span>
+                <Link className="home-fullchart" to={`/cycles/${selectedCycle.id}`}>
+                  Full chart →
+                </Link>
+              </div>
+            </div>
+
+            <TopThree nominations={nominations} />
+            <RankTable nominations={nominations} variant="home" />
+          </>
         ) : (
           <div className="loading-spinner"></div>
         )}
-      </div>
+      </section>
     </>
   )
 }
