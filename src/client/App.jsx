@@ -2,11 +2,18 @@ import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import './App.css'
 import RankTable, { TopThree } from './components/RankTable'
-import { rankedOf } from './lib/nominations'
+import { rankedOf, getArtistsString } from './lib/nominations'
 
 // A cycle only has something to say once it's been ranked and computed — an
 // empty snapshot has no Track/Artist of the Cycle to build the hero cards from.
 const isComputed = (snapshot) => Boolean(snapshot?.trackOfCycle && snapshot?.artistOfCycle)
+
+// 1st, 2nd, 3rd, 4th… — the teens are the exception to the last-digit rule
+const ordinal = (n) => {
+  const teens = n % 100
+  if (teens >= 11 && teens <= 13) return `${n}th`
+  return `${n}${{ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'}`
+}
 
 // Main App Component
 export default function App() {
@@ -15,9 +22,7 @@ export default function App() {
   const [stats, setStats] = useState(null)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [artistOfCycleTrack, setArtistOfCycleTrack] = useState(null)
-  const [trackOfCycleLeader, setTrackOfCycleLeader] = useState(null)
-  const [artistOfCycleLeader, setArtistOfCycleLeader] = useState(null)
-  const [mostNominationsLeader, setMostNominationsLeader] = useState(null)
+  const [highlights, setHighlights] = useState(null)
   const autoRotateRef = useRef(null)
 
   async function fetchStats() {
@@ -41,16 +46,10 @@ export default function App() {
       .sort((a, b) => a.rank - b.rank)[0] || null;
   }
 
-  async function fetchLeaderboard(leaderboardId) {
-    const res = await fetch(`/api/leaderboards/${leaderboardId}`);
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || `HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
-    const leader = data && data.length > 0 ? data[0] : null;
-    return leader;
+  async function fetchHighlights(cycleId) {
+    const res = await fetch(`/api/cycles/${cycleId}/highlights`);
+    if (!res.ok) throw new Error(`Failed to fetch highlights for cycle ${cycleId}`);
+    return res.json();
   }
 
   useEffect(() => {
@@ -78,14 +77,7 @@ export default function App() {
         );
         setArtistOfCycleTrack(artistNom);
 
-        const trackOfCycleLeader = await fetchLeaderboard('track-of-cycle');
-        setTrackOfCycleLeader(trackOfCycleLeader)
-
-        const artistOfCycleLeader = await fetchLeaderboard('artist-of-cycle');
-        setArtistOfCycleLeader(artistOfCycleLeader)
-
-        const mostNominationsLeader = await fetchLeaderboard('most-nominations');
-        setMostNominationsLeader(mostNominationsLeader)
+        setHighlights(await fetchHighlights(featured.cycle.id));
       } catch (err) {
         console.error(err);
       }
@@ -94,52 +86,14 @@ export default function App() {
     initialize();
   }, []);
 
-  // Auto-rotate cards every 7 seconds
-  useEffect(() => {
-    if (!stats) return
-    
-    const startAutoRotate = () => {
-      autoRotateRef.current = setInterval(() => {
-        setCurrentCardIndex(prev => (prev + 1) % 6)
-      }, 7000)
-    }
-    
-    startAutoRotate()
-    
-    return () => {
-      if (autoRotateRef.current) {
-        clearInterval(autoRotateRef.current)
-      }
-    }
-  }, [stats])
-
-  // Reset auto-rotate when manually changing cards
-  const handleCardChange = (newIndex) => {
-    setCurrentCardIndex(newIndex)
-    if (autoRotateRef.current) {
-      clearInterval(autoRotateRef.current)
-      autoRotateRef.current = setInterval(() => {
-        setCurrentCardIndex(prev => (prev + 1) % 6)
-      }, 7000)
-    }
-  }
-
-  // Helper function to get all artists from artistLinks
-  const getArtistsString = (track) => {
-    if (track?.artistLinks && track.artistLinks.length > 0) {
-      return track.artistLinks.map(link => link.artist.name).join(', ')
-    }
-    return track?.artist || ''
-  }
-
   // Create card data
   const getCardData = () => {
-    if (!isComputed(stats) || !artistOfCycleTrack || !trackOfCycleLeader || !artistOfCycleLeader || !mostNominationsLeader) return []
-    
-    return [
+    if (!isComputed(stats) || !artistOfCycleTrack) return []
+
+    const cards = [
       {
         type: 'Track of the Cycle',
-        text: `"${stats.trackOfCycle.title}" by ${getArtistsString(stats.trackOfCycle) || 'Unknown Artist'} is #1 on ${stats.cycle.name}.`,
+        text: `"${stats.trackOfCycle.title}" by ${getArtistsString(stats.trackOfCycle)} is #1 on ${stats.cycle.name}.`,
         image: stats.trackOfCycle?.album?.imageUrl,
       },
       {
@@ -154,27 +108,75 @@ export default function App() {
         : `There were no Best New Artist for ${stats.cycle.name}.`,
         image: stats.bestNewArtist?.imageUrl,
       },
-      {
-        type: 'Most Track of the Cycle',
-        text: `${trackOfCycleLeader.subjectName} has the most "Track of the Cycle" awards, winning ${trackOfCycleLeader.value} ${trackOfCycleLeader.value === 1 ? 'time' : 'times'}!`,
-        image: trackOfCycleLeader?.subjectImage,
-      },
-      {
-        type: 'Most Artist of the Cycle',
-        text: `${artistOfCycleLeader.subjectName} has the most "Artist of the Cycle" awards, winning ${artistOfCycleLeader.value} ${artistOfCycleLeader.value === 1 ? 'time' : 'times'}!`,
-        image: artistOfCycleLeader?.subjectImage,
-      },
-      {
-        type: 'Most Total Nominations',
-        text: `${mostNominationsLeader.subjectName} is the most nominated artist in history, with ${mostNominationsLeader.value} total ${mostNominationsLeader.value === 1 ? 'nomination' : 'nominations'}!`,
-        image: mostNominationsLeader?.subjectImage,
-      }
     ]
+
+    // The remaining three read history off the featured cycle. Each is skipped
+    // rather than faked when the data isn't there — a winning track with no
+    // album, or a cycle nobody has been nominated in.
+    const album = highlights?.album
+    if (album) {
+      cards.push({
+        type: 'Album Watch',
+        text: `${album.songsNominated} ${album.songsNominated === 1 ? 'song' : 'songs'} from ${album.title} ${album.songsNominated === 1 ? 'has' : 'have'} been nominated before. "${album.trackTitle}" is its ${ordinal(album.winNumber)} Track of the Cycle.`,
+        image: album.imageUrl,
+      })
+    }
+
+    const artist = highlights?.artist
+    if (artist) {
+      cards.push({
+        type: 'Artist Watch',
+        text: `${artist.name} has ${artist.nominations} career ${artist.nominations === 1 ? 'nomination' : 'nominations'}. This is their ${ordinal(artist.winNumber)} Artist of the Cycle win.`,
+        image: artist.imageUrl,
+      })
+    }
+
+    const debuts = highlights?.debuts
+    if (debuts?.totalArtists) {
+      cards.push({
+        type: 'New Blood',
+        text: debuts.count === 0
+          ? `No new names this time; all ${debuts.totalArtists} artists on ${stats.cycle.name} have charted before.`
+          : `${debuts.count} of the ${debuts.totalArtists} artists on ${stats.cycle.name} ${debuts.count === 1 ? 'is' : 'are'} nominated for the first time: ${debuts.artists.map(a => a.name).join(', ')}.`,
+        image: debuts.artists.find(a => a.imageUrl)?.imageUrl,
+      })
+    }
+
+    return cards
   }
 
   const cards = getCardData()
-  const currentCard = cards[currentCardIndex]
+  const cardCount = cards.length
+  // Highlight cards drop out when a cycle can't support them, so the rotation
+  // has to follow the real count rather than a fixed one.
+  const currentCard = cards[currentCardIndex] ?? cards[0]
   const rankedCount = rankedOf(nominations).length
+
+  // Auto-rotate cards every 7 seconds
+  useEffect(() => {
+    if (cardCount < 2) return
+
+    autoRotateRef.current = setInterval(() => {
+      setCurrentCardIndex(prev => (prev + 1) % cardCount)
+    }, 7000)
+
+    return () => {
+      if (autoRotateRef.current) {
+        clearInterval(autoRotateRef.current)
+      }
+    }
+  }, [cardCount])
+
+  // Reset auto-rotate when manually changing cards
+  const handleCardChange = (newIndex) => {
+    setCurrentCardIndex(newIndex)
+    if (autoRotateRef.current) {
+      clearInterval(autoRotateRef.current)
+      autoRotateRef.current = setInterval(() => {
+        setCurrentCardIndex(prev => (prev + 1) % cardCount)
+      }, 7000)
+    }
+  }
 
   return (
     <>

@@ -17,6 +17,8 @@ import {
 
 import { recomputeStatsForCycle } from './services/statsService.js';
 
+import { computeCycleHighlights } from './services/highlightsService.js';
+
 import {
   computeArtistsWithMostTrackOfCycle,
   computeArtistsWithMostArtistOfCycle,
@@ -322,7 +324,23 @@ app.get('/api/cycles/:id/stats', async (req, res, next) => {
   }
 });
 
-// c) Get stats for all cycles
+// c) Context for the home hero — album/artist history and debuts for one cycle
+app.get('/api/cycles/:id/highlights', async (req, res, next) => {
+  try {
+    const cycleId = Number(req.params.id);
+
+    const cycle = await db.cycle.findUnique({ where: { id: cycleId } });
+    if (!cycle) {
+      return res.status(404).json({ error: 'Cycle not found.' });
+    }
+
+    res.json(await computeCycleHighlights(cycleId));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// d) Get stats for all cycles
 app.get('/api/stats', async (req, res, next) => {
   try {
     const snapshots = await db.statsSnapshot.findMany({
