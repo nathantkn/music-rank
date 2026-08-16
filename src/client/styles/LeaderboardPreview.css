@@ -1,14 +1,16 @@
-/* Accordion board: the collapsed header is the only click target */
+/* Accordion board: the collapsed header is the only click target.
+   Renders only on the Records page, so the gold tokens it reads are the ones
+   .stats-page declares (see StatsPage.css). */
 
 .board {
   border-radius: 16px;
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: var(--warm-panel);
+  border: 1px solid var(--gold-hairline);
   overflow: hidden;
 }
 
 .board.expanded {
-  border-color: var(--border-hover);
+  border-color: var(--gold-border);
 }
 
 .board-head {
@@ -21,7 +23,7 @@
 }
 
 .board-head:hover {
-  background: var(--panel-alt);
+  background: #1C1D1A;
 }
 
 .board-head-left {
@@ -34,7 +36,7 @@
 .board-index {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--text-5);
+  color: var(--gold-mute);
 }
 
 .board-title {
@@ -63,7 +65,7 @@
 .board-leader-value {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--accent);
+  color: var(--gold);
 }
 
 .board-leader-art {
@@ -79,7 +81,7 @@
 
 .board-chevron {
   font-size: 13px;
-  color: var(--text-4);
+  color: var(--gold-mute);
   width: 16px;
   text-align: center;
 }

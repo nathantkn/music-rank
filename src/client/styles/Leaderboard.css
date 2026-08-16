@@ -1,7 +1,8 @@
-/* Expanded board table */
+/* Expanded board table. Records-page only, so the gold tokens come from
+   .stats-page (see StatsPage.css). */
 
 .board-body {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid #2C2B21;
   animation: panelIn 0.2s ease-out;
 }
 
@@ -17,29 +18,29 @@
 
 .board-row-head {
   padding: 10px 20px;
-  background: var(--panel-alt);
+  background: var(--warm-panel-alt);
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-4);
+  color: var(--gold-mute);
 }
 
 .board-row {
   align-items: center;
   padding: 8px 20px;
-  border-top: 1px solid var(--hairline);
+  border-top: 1px solid var(--warm-hairline);
 }
 
 .board-pos {
   font-family: var(--font-mono);
   font-size: 14px;
-  color: var(--text-4);
+  color: var(--gold-mute);
 }
 
 .board-pos.is-first {
-  color: var(--accent);
+  color: var(--gold);
 }
 
 .board-name {
@@ -66,7 +67,7 @@
 .board-value {
   font-family: var(--font-mono);
   font-size: 14px;
-  color: var(--text-2);
+  color: #DED7C4;
 }
 
 @media (max-width: 760px) {

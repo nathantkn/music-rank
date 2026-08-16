@@ -1,12 +1,30 @@
-/* Records page shell */
+/* Records page shell.
+   This page runs on gold rather than the app's cyan. The palette is declared on
+   .stats-page and nowhere else, so every warm rule below — and in
+   BigThreeSweep.css, LeaderboardPreview.css and Leaderboard.css, all of which
+   render only here — resolves inside this subtree and leaves the rest of the
+   app on the cyan accent. */
 
 .stats-page {
+  --gold: #EBD08A;
+  --gold-dim: #A08E63;
+  --gold-mute: #8A7A55;
+  --gold-border: #4A3C1C;
+  --gold-hairline: #26261F;
+  --warm-panel: #15161C;
+  --warm-panel-alt: #1A1B18;
+  --warm-hairline: #24241D;
+  --warm-tile: #23241D;
+
   max-width: 900px;
   margin: 0 auto;
   padding: 36px var(--gutter) 80px;
 }
 
-.stats-sub {
+/* Scoped rather than bare .stats-sub so it outranks .page-sub's gray on
+   specificity instead of on bundle order. */
+.stats-page .stats-sub {
+  color: var(--gold-mute);
   margin-bottom: 28px;
 }
 
@@ -14,6 +32,13 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* Warm over the global art placeholder — board thumbnails only. The sweep
+   portraits set their own tile colors inside the gold bezel. */
+.stats-page .art-tile {
+  background: var(--warm-tile);
+  border: 1px solid #2E2E24;
 }
 
 @media (max-width: 760px) {
