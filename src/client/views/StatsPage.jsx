@@ -60,7 +60,7 @@ export default function StatsPage() {
         <section className="stats-page">
             <h1 className="page-title">Records</h1>
             <p className="page-sub stats-sub">
-                Nine all-time leaderboards across every cycle ever run.
+                All-time leaderboards, for the all-time greats.
             </p>
 
             <div className="stats-list">

@@ -67,7 +67,8 @@ export default function CyclesView() {
       })
       if (res.ok) {
         const newCycle = await res.json()
-        setCycles([...cycles, newCycle])
+        // Newest first, matching the order /api/cycles hands back
+        setCycles([newCycle, ...cycles])
         cancelCreate()
       } else {
         console.error('Failed to create cycle', await res.text())
@@ -97,7 +98,7 @@ export default function CyclesView() {
         <div>
           <h1 className="page-title">Cycles</h1>
           <p className="page-sub">
-            {cycles.length} {cycles.length === 1 ? 'cycle' : 'cycles'} run so far. One is active at a time.
+            {cycles.length} {cycles.length === 1 ? 'cycle' : 'cycles'} run so far.
           </p>
         </div>
         <button className="btn-accent cycles-create" onClick={openCreate}>
@@ -177,7 +178,6 @@ export default function CyclesView() {
                 <Link key={cycle.id} className="archive-card" to={`/cycles/${cycle.id}`}>
                   <div className="archive-card-head">
                     <span className="archive-name">{cycle.name}</span>
-                    <span className="chip-archived">Archived</span>
                   </div>
                   <div className="archive-card-body">
                     <div className="archive-art art-tile">

@@ -1,6 +1,16 @@
 import db from '../db.js';
 import { getSpotifyAccessToken } from './spotifyAuth.js';
 
+// Spotify failures are upstream failures — keep the real status/body so the
+// client sees "rate limited" or "bad token" instead of a bare 500.
+async function spotifyError(label, res) {
+    const body = await res.text().catch(() => '');
+    const err = new Error(`Spotify ${label} failed: ${res.status} ${body}`.trim());
+    err.status = res.status === 429 ? 429 : 502;
+    err.upstreamStatus = res.status;
+    return err;
+}
+
 
 // 1) Fetch a Spotify track
 export async function fetchSpotifyTrack(spotifyTrackId) {
@@ -14,7 +24,7 @@ export async function fetchSpotifyTrack(spotifyTrackId) {
             },
         }
     );
-    if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
+    if (!res.ok) throw await spotifyError(`track fetch ${spotifyTrackId}`, res);
     const data = await res.json();
 
     const imageUrl = data.album.images?.[0]?.url ?? null;
@@ -44,7 +54,7 @@ export async function fetchSpotifyArtistDetails(spotifyArtistId) {
     );
 
     if (!res.ok) {
-        throw new Error(`Spotify Artist API error ${res.status}`);
+        throw await spotifyError(`artist fetch ${spotifyArtistId}`, res);
     }
 
     const data = await res.json();
@@ -151,8 +161,7 @@ export async function searchSpotifyTracks(query) {
         }
     );
     if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`Spotify search API error ${res.status}: ${err}`);
+        throw await spotifyError('search', res);
     }
     const data = await res.json();
     return data.tracks.items.map(item => ({
@@ -175,7 +184,7 @@ export async function searchAlbums(query) {
     });
 
     if (!res.ok) {
-        throw new Error(`Spotify album search failed: ${res.status}`);
+        throw await spotifyError('album search', res);
     }
 
     const data = await res.json();
@@ -196,7 +205,7 @@ export async function fetchAlbumTracks(spotifyAlbumId) {
     });
 
     if (!res.ok) {
-        throw new Error(`Spotify album fetch failed: ${res.status}`);
+        throw await spotifyError('album fetch', res);
     }
 
     const data = await res.json();

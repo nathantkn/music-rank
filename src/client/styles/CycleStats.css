@@ -46,11 +46,6 @@
   line-height: 1.25;
 }
 
-.award-sub {
-  font-size: 14px;
-  color: var(--text-3);
-}
-
 .award-unset {
   font-size: 14px;
   color: var(--text-4);

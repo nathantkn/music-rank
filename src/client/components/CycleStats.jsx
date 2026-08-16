@@ -28,7 +28,7 @@ function artistSubline(artist, nominations) {
     return best ? `${count}, best at #${best.rank}` : count
 }
 
-function AwardCard({ label, image, name, sub }) {
+function AwardCard({ label, image, name }) {
     return (
         <article className="award-card">
             <div className="award-label">{label}</div>
@@ -46,7 +46,6 @@ function AwardCard({ label, image, name, sub }) {
                     {name ? (
                         <>
                             <div className="award-name">{name}</div>
-                            <div className="award-sub">{sub}</div>
                         </>
                     ) : (
                         <div className="award-unset">Not set</div>
@@ -57,7 +56,7 @@ function AwardCard({ label, image, name, sub }) {
     )
 }
 
-export default function CycleStats({ cycleId, isActive, nominations = [] }) {
+export default function CycleStats({ cycleId, nominations = [] }) {
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -129,11 +128,9 @@ export default function CycleStats({ cycleId, isActive, nominations = [] }) {
                 <span className="awards-computed">
                     {error || 'No awards computed for this cycle yet.'}
                 </span>
-                {isActive && (
-                    <button className="btn-outline" onClick={computeStats}>
-                        Compute stats
-                    </button>
-                )}
+                <button className="btn-outline" onClick={computeStats}>
+                    Compute stats
+                </button>
             </div>
         )
     }
@@ -147,19 +144,16 @@ export default function CycleStats({ cycleId, isActive, nominations = [] }) {
                     label="Track of the Cycle"
                     image={getAlbumImage(stats.trackOfCycle)}
                     name={stats.trackOfCycle?.title}
-                    sub={stats.trackOfCycle && getArtistsString(stats.trackOfCycle)}
                 />
                 <AwardCard
                     label="Artist of the Cycle"
                     image={stats.artistOfCycle?.imageUrl}
                     name={stats.artistOfCycle?.name}
-                    sub={stats.artistOfCycle && artistSubline(stats.artistOfCycle, nominations)}
                 />
                 <AwardCard
                     label="Best New Artist"
                     image={stats.bestNewArtist?.imageUrl}
                     name={stats.bestNewArtist?.name}
-                    sub="picked by hand"
                 />
             </div>
 

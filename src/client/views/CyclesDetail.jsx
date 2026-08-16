@@ -185,44 +185,45 @@ export default function CyclesDetail() {
                     </div>
 
                     <div className="detail-actions">
-                        {selectedCycle.isActive && (
-                            <button
-                                className="btn-accent"
-                                onClick={() => navigate(`/cycles/${selectedCycle.id}/edit`)}
-                            >
-                                Edit rankings
-                            </button>
-                        )}
-
-                        {!selectedCycle.isActive && (
-                            confirmingActive ? (
-                                <div className="confirm-inline">
-                                    <span className="confirm-copy">
-                                        {activeCycle
-                                            ? `Make ${selectedCycle.name} active? ${activeCycle.name} stops being the active cycle.`
-                                            : `Make ${selectedCycle.name} the active cycle?`}
-                                    </span>
-                                    <button className="btn-accent" onClick={makeActive}>Make active</button>
-                                    <button className="btn-ghost" onClick={() => setConfirmingActive(false)}>
-                                        Cancel
-                                    </button>
-                                </div>
-                            ) : (
-                                <button className="btn-accent" onClick={() => setConfirmingActive(true)}>
-                                    Make active
+                        {/* The confirm takes the whole row — sharing it wraps the buttons onto a second line */}
+                        {confirmingActive ? (
+                            <div className="confirm-inline">
+                                <span className="confirm-copy">
+                                    {activeCycle
+                                        ? `Make ${selectedCycle.name} active? ${activeCycle.name} stops being the active cycle.`
+                                        : `Make ${selectedCycle.name} the active cycle?`}
+                                </span>
+                                <button className="btn-accent" onClick={makeActive}>Make active</button>
+                                <button className="btn-ghost" onClick={() => setConfirmingActive(false)}>
+                                    Cancel
                                 </button>
-                            )
-                        )}
+                            </div>
+                        ) : (
+                            <>
+                                {/* Editing never required promoting the cycle — only the button was hidden */}
+                                <button
+                                    className="btn-accent"
+                                    onClick={() => navigate(`/cycles/${selectedCycle.id}/edit`)}
+                                >
+                                    Edit rankings
+                                </button>
 
-                        <button className="btn-ghost" onClick={() => navigate('/cycles')}>
-                            Back to cycles
-                        </button>
+                                {!selectedCycle.isActive && (
+                                    <button className="btn-outline" onClick={() => setConfirmingActive(true)}>
+                                        Make active
+                                    </button>
+                                )}
+
+                                <button className="btn-ghost" onClick={() => navigate('/cycles')}>
+                                    Back to cycles
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 
                 <CycleStats
                     cycleId={selectedCycle.id}
-                    isActive={selectedCycle.isActive}
                     nominations={nominations}
                 />
 

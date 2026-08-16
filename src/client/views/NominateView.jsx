@@ -11,6 +11,17 @@ function formatReleaseDate(value) {
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+// The API sends { error } on failure — show that rather than a bare status code
+async function readError(response, fallback) {
+  try {
+    const body = await response.json()
+    if (body?.error) return body.error
+  } catch {
+    // non-JSON body, fall through
+  }
+  return `${fallback} ${response.status}`
+}
+
 function formatDuration(durationMs) {
   if (!durationMs) return ''
   const minutes = Math.floor(durationMs / 60000)
@@ -80,7 +91,7 @@ export default function NominateView() {
       const response = await fetch(
         `${endpoint}?q=${encodeURIComponent(searchQuery)}`
       )
-      if (!response.ok) throw new Error(`Search error ${response.status}`)
+      if (!response.ok) throw new Error(await readError(response, 'Search error'))
       const data = await response.json()
 
       if (searchMode === 'albums') {
@@ -118,7 +129,7 @@ export default function NominateView() {
     setIsLoadingAlbum(true)
     try {
       const response = await fetch(`/api/search/album/${album.id}`)
-      if (!response.ok) throw new Error(`Album fetch error ${response.status}`)
+      if (!response.ok) throw new Error(await readError(response, 'Album fetch error'))
       const data = await response.json()
 
       setSelectedAlbum({
@@ -216,7 +227,7 @@ export default function NominateView() {
           <p className="page-sub">
             {activeCycle ? (
               <>
-                Tracks land in <Link to={`/cycles/${activeCycle.id}`}>{activeCycle.name}</Link> unranked.
+                Currently adding tracks to <Link to={`/cycles/${activeCycle.id}`}>{activeCycle.name}</Link>.
               </>
             ) : (
               <>

@@ -14,6 +14,12 @@ export async function getSpotifyAccessToken() {
         return spotifyToken;
     }
 
+    if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
+        const err = new Error('Spotify credentials are not configured on the server (SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET).');
+        err.status = 500;
+        throw err;
+    }
+
     const creds = Buffer
         .from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`)
         .toString('base64');
@@ -28,9 +34,12 @@ export async function getSpotifyAccessToken() {
     });
 
     if (!resp.ok) {
-        throw new Error(`Token request failed: ${resp.status}`);
+        const body = await resp.text();
+        const err = new Error(`Spotify token request failed: ${resp.status} ${body}`);
+        err.status = 502;
+        throw err;
     }
-    
+
     const { access_token, expires_in } = await resp.json();
     spotifyToken = access_token;
     spotifyTokenExpiresAt = dayjs().add(expires_in - 60, 'second');

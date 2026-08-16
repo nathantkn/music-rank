@@ -165,19 +165,6 @@ a:hover {
   white-space: nowrap;
 }
 
-.chip-archived {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 4px 8px;
-  border-radius: 5px;
-  border: 1px solid #232E42;
-  color: var(--text-4);
-  white-space: nowrap;
-}
-
 @keyframes panelIn {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }

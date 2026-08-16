@@ -4,6 +4,10 @@ import './App.css'
 import RankTable, { TopThree } from './components/RankTable'
 import { rankedOf } from './lib/nominations'
 
+// A cycle only has something to say once it's been ranked and computed — an
+// empty snapshot has no Track/Artist of the Cycle to build the hero cards from.
+const isComputed = (snapshot) => Boolean(snapshot?.trackOfCycle && snapshot?.artistOfCycle)
+
 // Main App Component
 export default function App() {
   const [selectedCycle, setSelectedCycle] = useState(null)
@@ -55,15 +59,21 @@ export default function App() {
         const statsList = await fetchStats();
         if (!statsList.length) return;
 
-        const mostRecent = statsList[0];
-        setStats(mostRecent);
-        setSelectedCycle(mostRecent.cycle);
+        // Lead with the active cycle; if it hasn't been ranked and computed yet,
+        // fall back to the most recent cycle that has been.
+        const active = statsList.find(snapshot => snapshot.cycle.isActive);
+        const featured = isComputed(active)
+          ? active
+          : (statsList.find(isComputed) ?? statsList[0]);
 
-        const nominationsData = await fetchNominations(mostRecent.cycle.id);
+        setStats(featured);
+        setSelectedCycle(featured.cycle);
+
+        const nominationsData = await fetchNominations(featured.cycle.id);
         setNominations(nominationsData);
 
         const artistNom = findArtistOfCycleNomination(
-          mostRecent.artistOfCycle,
+          featured.artistOfCycle,
           nominationsData
         );
         setArtistOfCycleTrack(artistNom);
@@ -124,7 +134,7 @@ export default function App() {
 
   // Create card data
   const getCardData = () => {
-    if (!stats || !artistOfCycleTrack || !trackOfCycleLeader || !artistOfCycleLeader || !mostNominationsLeader) return []
+    if (!isComputed(stats) || !artistOfCycleTrack || !trackOfCycleLeader || !artistOfCycleLeader || !mostNominationsLeader) return []
     
     return [
       {

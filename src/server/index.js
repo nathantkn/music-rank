@@ -37,7 +37,7 @@ app.use(express.json());
 app.get('/api/cycles', async (req, res, next) => {
   try {
     const cycles = await db.cycle.findMany({
-      orderBy: { id: 'asc' }
+      orderBy: { id: 'desc' }
     });
     res.json(cycles);
   } catch (err) {
@@ -227,6 +227,7 @@ app.get('/api/search', async (req, res, next) => {
 app.get('/api/search/album', async (req, res, next) => {
   try {
     const { q } = req.query;
+    if (!q) return res.status(400).json({ error: 'Query parameter "q" is required.' });
     const results = await searchAlbums(q);
     res.json(results);
   } catch (err) {
@@ -326,7 +327,7 @@ app.get('/api/stats', async (req, res, next) => {
   try {
     const snapshots = await db.statsSnapshot.findMany({
       include: {
-        cycle: { select: { id: true, name: true } },
+        cycle: { select: { id: true, name: true, isActive: true } },
         trackOfCycle: {
           include: {
             album: true,
@@ -440,9 +441,9 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Global error handler
-app.use((err, req, res, next) => { 
-  console.error(err);
-  res.status(500).json({ error: err.message });
+app.use((err, req, res, next) => {
+  console.error(`${req.method} ${req.originalUrl} failed:`, err);
+  res.status(err.status || 500).json({ error: err.message });
 });
 
 // Start server
