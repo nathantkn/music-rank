@@ -1,12 +1,32 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import './App.css'
 import RankTable, { TopThree } from './components/RankTable'
 import { rankedOf, getArtistsString } from './lib/nominations'
+import { statsQuery, nominationsQuery, highlightsQuery } from './lib/api'
 
 // A cycle only has something to say once it's been ranked and computed — an
 // empty snapshot has no Track/Artist of the Cycle to build the hero cards from.
 const isComputed = (snapshot) => Boolean(snapshot?.trackOfCycle && snapshot?.artistOfCycle)
+
+// Lead with the active cycle; if it hasn't been ranked and computed yet, fall
+// back to the most recent cycle that has been.
+function pickFeatured(statsList) {
+  if (!statsList?.length) return null
+  const active = statsList.find(snapshot => snapshot.cycle.isActive)
+  if (isComputed(active)) return active
+  return statsList.find(isComputed) ?? statsList[0]
+}
+
+function findArtistOfCycleNomination(artist, nominations) {
+  if (!artist) return null
+  return nominations
+    .filter(nom =>
+      nom.track?.artistLinks?.some(link => link.artist.id === artist.id)
+    )
+    .sort((a, b) => a.rank - b.rank)[0] || null
+}
 
 // 1st, 2nd, 3rd, 4th… — the teens are the exception to the last-digit rule
 const ordinal = (n) => {
@@ -17,74 +37,21 @@ const ordinal = (n) => {
 
 // Main App Component
 export default function App() {
-  const [selectedCycle, setSelectedCycle] = useState(null)
-  const [nominations, setNominations] = useState([])
-  const [stats, setStats] = useState(null)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
-  const [artistOfCycleTrack, setArtistOfCycleTrack] = useState(null)
-  const [highlights, setHighlights] = useState(null)
   const autoRotateRef = useRef(null)
 
-  async function fetchStats() {
-    const res = await fetch(`/api/stats`);
-    if (!res.ok) throw new Error('Failed to fetch stats');
-    return res.json();
-  }
+  const { data: statsList } = useQuery(statsQuery())
+  const stats = pickFeatured(statsList)
+  const cycleId = stats?.cycle.id ?? null
 
-  async function fetchNominations(cycleId) {
-    const res = await fetch(`/api/cycles/${cycleId}/nominations`);
-    if (!res.ok) throw new Error(`Failed to fetch nominations for cycle ${cycleId}`);
-    return res.json();
-  }
+  // Both of these hang off the featured cycle but not off each other, so they
+  // go out together — waiting for nominations before asking for highlights was
+  // costing a whole round trip for nothing.
+  const { data: nominations = [] } = useQuery(nominationsQuery(cycleId))
+  const { data: highlights } = useQuery(highlightsQuery(cycleId))
 
-  function findArtistOfCycleNomination(artist, nominations) {
-    if (!artist) return null;
-    return nominations
-      .filter(nom =>
-        nom.track?.artistLinks?.some(link => link.artist.id === artist.id)
-      )
-      .sort((a, b) => a.rank - b.rank)[0] || null;
-  }
-
-  async function fetchHighlights(cycleId) {
-    const res = await fetch(`/api/cycles/${cycleId}/highlights`);
-    if (!res.ok) throw new Error(`Failed to fetch highlights for cycle ${cycleId}`);
-    return res.json();
-  }
-
-  useEffect(() => {
-    async function initialize() {
-      try {
-        const statsList = await fetchStats();
-        if (!statsList.length) return;
-
-        // Lead with the active cycle; if it hasn't been ranked and computed yet,
-        // fall back to the most recent cycle that has been.
-        const active = statsList.find(snapshot => snapshot.cycle.isActive);
-        const featured = isComputed(active)
-          ? active
-          : (statsList.find(isComputed) ?? statsList[0]);
-
-        setStats(featured);
-        setSelectedCycle(featured.cycle);
-
-        const nominationsData = await fetchNominations(featured.cycle.id);
-        setNominations(nominationsData);
-
-        const artistNom = findArtistOfCycleNomination(
-          featured.artistOfCycle,
-          nominationsData
-        );
-        setArtistOfCycleTrack(artistNom);
-
-        setHighlights(await fetchHighlights(featured.cycle.id));
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    initialize();
-  }, []);
+  const selectedCycle = stats?.cycle ?? null
+  const artistOfCycleTrack = findArtistOfCycleNomination(stats?.artistOfCycle, nominations)
 
   // Create card data
   const getCardData = () => {
@@ -117,7 +84,7 @@ export default function App() {
     if (album) {
       cards.push({
         type: 'Album Watch',
-        text: `${album.songsNominated} ${album.songsNominated === 1 ? 'song' : 'songs'} from ${album.title} ${album.songsNominated === 1 ? 'has' : 'have'} been nominated before. "${album.trackTitle}" is its ${ordinal(album.winNumber)} Track of the Cycle.`,
+        text: `${album.songsNominated} ${album.songsNominated === 1 ? 'song' : 'songs'} from "${album.title}" ${album.songsNominated === 1 ? 'has' : 'have'} been nominated before. "${album.trackTitle}" is its ${ordinal(album.winNumber)} Track of the Cycle.`,
         image: album.imageUrl,
       })
     }

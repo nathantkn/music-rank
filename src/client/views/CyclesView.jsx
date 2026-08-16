@@ -1,39 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import '../styles/CyclesView.css'
 import { getArtistsString, getAlbumImage } from '../lib/nominations'
+import { cyclesQuery, statsQuery } from '../lib/api'
+import { invalidateAll } from '../lib/queryClient'
 
 export default function CyclesView() {
-  const [cycles, setCycles] = useState([])
-  const [stats, setStats] = useState([])
   const [createOpen, setCreateOpen] = useState(false)
   const [draftName, setDraftName] = useState('')
-  const [creating, setCreating] = useState(false)
 
-  // Fetch all cycles and stats
-  useEffect(() => {
-    // Fetch cycles
-    fetch('/api/cycles')
-      .then(r => r.json())
-      .then(setCycles)
-      .catch(console.error)
-
-    // Fetch stats
-    fetch(`/api/stats`)
-      .then(async (res) => {
-          if (res.status === 404) {
-            // No stats computed yet
-            setStats([])
-            return
-          }
-          if (!res.ok) {
-            throw new Error('Failed to fetch stats')
-          }
-          const data = await res.json()
-          setStats(data)
-      })
-      .catch(console.error)
-  }, [])
+  // /api/stats is the same entry the home hero reads, so arriving here from the
+  // home page is a cache hit rather than a second copy of the same request.
+  const { data: cycles = [] } = useQuery(cyclesQuery())
+  const { data: stats = [] } = useQuery(statsQuery())
 
   // Get stats for a specific cycle
   const getStatsForCycle = (cycleId) => {
@@ -41,7 +21,9 @@ export default function CyclesView() {
   }
 
   const currentCycle = cycles.find(cycle => cycle.isActive)
-  const archive = cycles.filter(cycle => !cycle.isActive)
+  // The list is every cycle — promoting one shouldn't make it vanish from here,
+  // it just also gets featured in the card above.
+  const allCycles = cycles
 
   const openCreate = () => {
     setDraftName(`Cycle ${cycles.length + 1}`)
@@ -53,31 +35,32 @@ export default function CyclesView() {
     setDraftName('')
   }
 
-  // Creation only fires on confirm — never on opening the panel.
-  const confirmCreate = async () => {
-    const name = draftName.trim()
-    if (!name || creating) return
-
-    setCreating(true)
-    try {
+  const createCycle = useMutation({
+    mutationFn: async (name) => {
       const res = await fetch('/api/cycles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
       })
-      if (res.ok) {
-        const newCycle = await res.json()
-        // Newest first, matching the order /api/cycles hands back
-        setCycles([newCycle, ...cycles])
-        cancelCreate()
-      } else {
-        console.error('Failed to create cycle', await res.text())
-      }
-    } catch (err) {
-      console.error('Error creating cycle:', err)
-    } finally {
-      setCreating(false)
-    }
+      if (!res.ok) throw new Error(await res.text())
+      return res.json()
+    },
+    // Refetching beats splicing the new cycle in by hand — the list comes back
+    // in the server's own order, and nothing can drift out of sync.
+    onSuccess: () => {
+      invalidateAll()
+      cancelCreate()
+    },
+    onError: (err) => console.error('Error creating cycle:', err),
+  })
+
+  const creating = createCycle.isPending
+
+  // Creation only fires on confirm — never on opening the panel.
+  const confirmCreate = () => {
+    const name = draftName.trim()
+    if (!name || creating) return
+    createCycle.mutate(name)
   }
 
   const handleDraftKeyDown = (e) => {
@@ -164,14 +147,14 @@ export default function CyclesView() {
         </Link>
       )}
 
-      {archive.length > 0 && (
+      {allCycles.length > 0 && (
         <>
           <div className="archive-head">
-            <h3 className="archive-label">Archive</h3>
+            <h3 className="archive-label">All Cycles</h3>
             <span className="archive-rule" />
           </div>
           <div className="archive-grid">
-            {archive.map(cycle => {
+            {allCycles.map(cycle => {
               const track = getStatsForCycle(cycle.id)?.trackOfCycle
 
               return (

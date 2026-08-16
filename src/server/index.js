@@ -28,7 +28,8 @@ import {
   computeAlbumsWithMostSongsNominated,
   computeArtistsWithMostCycleAppearances,
   computeArtistsWithLongestCycleStreak,
-  computeAlbumsWithMostTrackOfCycle
+  computeAlbumsWithMostTrackOfCycle,
+  computeBigThreeSweepArtists
 } from './services/leaderboardService.js';
 
 const app = express();
@@ -285,7 +286,23 @@ app.get('/api/cycles/:id/stats', async (req, res, next) => {
             artistLinks:  { include: { artist: true } }
           }
         },
-        artistOfCycle: { select: { id: true, name: true, imageUrl: true } },
+        artistOfCycle: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+            // Which number Artist of the Cycle win this is for them. Counted as
+            // of this cycle, like the home hero does it — an older cycle's card
+            // shouldn't cite wins the artist only picked up later. Filtering the
+            // relation count keeps it inside this query instead of costing a
+            // second round trip.
+            _count: {
+              select: {
+                artistOfCycle: { where: { cycleId: { lte: cycleId } } }
+              }
+            }
+          }
+        },
         bestNewArtist: { select: { id: true, name: true, imageUrl: true } },
       }
     });
@@ -310,7 +327,12 @@ app.get('/api/cycles/:id/stats', async (req, res, next) => {
         : null,
 
       artistOfCycle: snapshot.artistOfCycle
-        ? { id: snapshot.artistOfCycle.id, name: snapshot.artistOfCycle.name, imageUrl: snapshot.artistOfCycle.imageUrl }
+        ? {
+            id:         snapshot.artistOfCycle.id,
+            name:       snapshot.artistOfCycle.name,
+            imageUrl:   snapshot.artistOfCycle.imageUrl,
+            winNumber:  snapshot.artistOfCycle._count.artistOfCycle
+          }
         : null,
 
       bestNewArtist: snapshot.bestNewArtist
@@ -329,12 +351,14 @@ app.get('/api/cycles/:id/highlights', async (req, res, next) => {
   try {
     const cycleId = Number(req.params.id);
 
-    const cycle = await db.cycle.findUnique({ where: { id: cycleId } });
-    if (!cycle) {
+    // The existence check rides along inside the highlights query rather than
+    // costing its own round trip — null means no such cycle.
+    const highlights = await computeCycleHighlights(cycleId);
+    if (!highlights) {
       return res.status(404).json({ error: 'Cycle not found.' });
     }
 
-    res.json(await computeCycleHighlights(cycleId));
+    res.json(highlights);
   } catch (err) {
     next(err);
   }
@@ -441,6 +465,19 @@ app.get('/api/leaderboards/artist-cycle-streaks', async (req, res, next) => {
 app.get('/api/leaderboards/album-track-of-cycle', async (req, res, next) => {
   try {
     const data = await computeAlbumsWithMostTrackOfCycle(10);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 6) ACHIEVEMENTS
+// Not a ranking — a roll of everyone who has cleared the bar, so it gets its
+// own route family rather than pretending to be a leaderboard.
+
+app.get('/api/achievements/big-three-sweep', async (req, res, next) => {
+  try {
+    const data = await computeBigThreeSweepArtists(20);
     res.json(data);
   } catch (err) {
     next(err);

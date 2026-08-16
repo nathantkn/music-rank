@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import BigThreeSweep from '../components/BigThreeSweep.jsx';
 import LeaderboardPreview from '../components/LeaderboardPreview.jsx';
 import '../styles/StatsPage.css';
 
@@ -62,6 +63,8 @@ export default function StatsPage() {
             <p className="page-sub stats-sub">
                 All-time leaderboards, for the all-time greats.
             </p>
+
+            <BigThreeSweep />
 
             <div className="stats-list">
                 {leaderboardConfigs.map((config, index) => (

@@ -7,11 +7,71 @@
   margin-bottom: 14px;
 }
 
+/* Each award owns an accent and a border tuned to it, fixed to the slot rather
+   than sampled from the art — the colour has to stay the same when the winner
+   changes. The three variants only set the custom properties; every rule below
+   reads them. */
+
+.award-track {
+  --award-accent: #5CE1FF;
+  --award-border: #1F3646;
+}
+
+.award-artist {
+  --award-accent: #FFC46B;
+  --award-border: #3A3020;
+}
+
+.award-debut {
+  --award-accent: #B49BFF;
+  --award-border: #2E2A47;
+}
+
+/* Square, because the art is: covers and artist portraits both come back from
+   Spotify at 1:1, so matching the card to them is what shows the whole image
+   without letterboxing it. Height follows the grid column, and all three
+   columns are equal, so the row still can't shift — a winner with no image or a
+   subline that arrives late leaves the square alone. */
 .award-card {
+  position: relative;
+  overflow: hidden;
   border-radius: var(--r-card);
-  background: var(--panel);
-  border: 1px solid var(--border);
+  border: 1px solid var(--award-border);
+  aspect-ratio: 1 / 1;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: var(--panel);
+}
+
+/* Art and scrim are only rendered when there's an image to show; without one the
+   card is the flat panel above, since the scrim alone would just darken it.
+   The art carries most of its own brightness — holding it back a little keeps
+   busy covers from fighting the accent label, and the scrim below is what
+   actually buys the text its contrast. */
+.award-art {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.72;
+}
+
+.award-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 14, 20, 0.1) 0%,
+    rgba(11, 14, 20, 0.62) 46%,
+    rgba(11, 14, 20, 0.94) 100%
+  );
+}
+
+.award-content {
+  position: relative;
+  min-width: 0;
 }
 
 .award-label {
@@ -20,30 +80,22 @@
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 16px;
-}
-
-.award-body {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.award-art {
-  width: 72px;
-  height: 72px;
-  border-radius: var(--r-control);
-}
-
-.award-text {
-  min-width: 0;
+  color: var(--award-accent);
+  margin-bottom: 10px;
 }
 
 .award-name {
-  font-size: 17px;
+  font-size: 22px;
   font-weight: 600;
   line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+/* Lighter than the usual secondary text — it has to hold up over artwork. */
+.award-sub {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #A6B2C6;
 }
 
 .award-unset {

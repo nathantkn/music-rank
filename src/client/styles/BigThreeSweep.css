@@ -1,0 +1,126 @@
+/* Big Three Sweep — a roll of honour, not a ranked board, so it sits above the
+   accordion and reads as cards rather than rows. */
+
+.sweep {
+  margin-bottom: 32px;
+}
+
+.sweep-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.sweep-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.sweep-sub {
+  font-size: 13px;
+  color: var(--text-4);
+  max-width: 60ch;
+}
+
+.sweep-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent-soft-border);
+  background: var(--accent-soft);
+  border-radius: var(--r-chip);
+  padding: 5px 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sweep-empty {
+  font-size: 13px;
+  color: var(--text-4);
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+}
+
+.sweep-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.sweep-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--panel);
+  border: 1px solid var(--accent-soft-border);
+}
+
+.sweep-art {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+
+.sweep-body {
+  min-width: 0;
+}
+
+.sweep-name {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sweep-when {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-4);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sweep-badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.sweep-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-soft-border);
+  border-radius: var(--r-chip);
+  padding: 3px 7px;
+  cursor: default;
+}
+
+.sweep-badge-mult {
+  font-style: normal;
+  color: var(--text-3);
+}
+
+@media (max-width: 760px) {
+  .sweep-grid {
+    grid-template-columns: 1fr;
+  }
+}

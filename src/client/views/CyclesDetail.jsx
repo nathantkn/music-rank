@@ -5,6 +5,7 @@ import { rankedOf, unrankedOf } from '../lib/nominations'
 import Breadcrumb from '../components/Breadcrumb'
 import '../styles/CyclesDetail.css'
 import CycleStats from '../components/CycleStats'
+import { invalidateAll } from '../lib/queryClient'
 
 export default function CyclesDetail() {
     const navigate = useNavigate()
@@ -68,6 +69,8 @@ export default function CyclesDetail() {
                 setSelectedCycle(updatedCycle)
                 setActiveCycle(updatedCycle)
                 setConfirmingActive(false)
+                // Which cycle is active decides what the home hero leads with.
+                invalidateAll()
             } else {
                 console.error('Failed to make cycle active')
             }
@@ -102,6 +105,7 @@ export default function CyclesDetail() {
                 const updatedCycle = await res.json()
                 setSelectedCycle(updatedCycle)
                 setIsEditingName(false)
+                invalidateAll()
             } else {
                 console.error('Failed to update cycle name')
                 cancelNameEdit()
@@ -222,10 +226,7 @@ export default function CyclesDetail() {
                     </div>
                 </div>
 
-                <CycleStats
-                    cycleId={selectedCycle.id}
-                    nominations={nominations}
-                />
+                <CycleStats cycleId={selectedCycle.id} />
 
                 {nominations.length === 0 ? (
                     <div className="detail-empty">

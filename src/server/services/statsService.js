@@ -1,12 +1,12 @@
 import db from '../db.js';
 
 /**
- * Recomputes and upserts StatsSnapshot for a given cycleId.
+ * Derives the two automatic awards for a cycle without writing anything, so a
+ * backfill can preview what it would change before it changes it.
  *
  * @param {number} cycleId
- * @param {number|null} bestNewArtistId  // pass in the manual Best New Artist (or null)
  */
-export async function recomputeStatsForCycle(cycleId, bestNewArtistId = null) {
+export async function computeStatsForCycle(cycleId) {
   // 1) Get the rank‐1 nomination’s trackId (Track of the Cycle)
   const topNom = await db.nomination.findFirst({
     where: { cycleId, rank: 1 },
@@ -41,6 +41,18 @@ export async function recomputeStatsForCycle(cycleId, bestNewArtistId = null) {
 
   // If no nominations exist, leave it null
   const artistOfCycleId = topArtistResult[0]?.artistId ?? null;
+
+  return { trackOfCycleId, artistOfCycleId };
+}
+
+/**
+ * Recomputes and upserts StatsSnapshot for a given cycleId.
+ *
+ * @param {number} cycleId
+ * @param {number|null} bestNewArtistId  // pass in the manual Best New Artist (or null)
+ */
+export async function recomputeStatsForCycle(cycleId, bestNewArtistId = null) {
+  const { trackOfCycleId, artistOfCycleId } = await computeStatsForCycle(cycleId);
 
   // 3) Upsert into StatsSnapshot
   await db.statsSnapshot.upsert({

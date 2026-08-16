@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import '../styles/CycleStats.css'
-import { getArtistsString, getAlbumImage } from '../lib/nominations'
+import { getAlbumImage } from '../lib/nominations'
+import { highlightsQuery } from '../lib/api'
+import { invalidateAll } from '../lib/queryClient'
 
 // "9 Aug 2026, 21:14"
 function formatComputedAt(value) {
@@ -16,50 +19,67 @@ function formatComputedAt(value) {
     })
 }
 
-// "6 nominations, best at #4" — derived from the cycle's nominations, no extra fetch.
-function artistSubline(artist, nominations) {
-    const mine = nominations.filter(nom =>
-        nom.track?.artistLinks?.some(link => link.artist.id === artist.id)
-    )
-    const count = `${mine.length} ${mine.length === 1 ? 'nomination' : 'nominations'}`
-    const best = mine
-        .filter(nom => nom.rank != null)
-        .sort((a, b) => a.rank - b.rank)[0]
-    return best ? `${count}, best at #${best.rank}` : count
+// "3rd win" — 1st/2nd/3rd, then th, with the 11th–13th exception.
+function ordinal(n) {
+    const teens = n % 100
+    if (teens >= 11 && teens <= 13) return `${n}th`
+    switch (n % 10) {
+        case 1: return `${n}st`
+        case 2: return `${n}nd`
+        case 3: return `${n}rd`
+        default: return `${n}th`
+    }
 }
 
-function AwardCard({ label, image, name }) {
+// "Out of 4 new artists" — the field the pick was made from, counted the same
+// way the home hero's New Blood card counts it: artists on this cycle with no
+// nomination in any earlier one.
+function debutSubline(artist, debuts) {
+    // A cycle can have a hand-picked winner and no debuts at all — the picker
+    // offers every artist on the chart, not just the new ones. Say nothing
+    // rather than "out of 0".
+    if (!artist || !debuts?.count) return null
+    return `Out of ${debuts.count} new ${debuts.count === 1 ? 'artist' : 'artists'}`
+}
+
+// `variant` carries the award's accent and border via custom properties — see
+// CycleStats.css. The art fills the card, so a winner with no image falls back
+// to the bare panel rather than a gap.
+function AwardCard({ variant, label, image, name, sub }) {
     return (
-        <article className="award-card">
-            <div className="award-label">{label}</div>
-            <div className="award-body">
-                <div className="award-art art-tile">
-                    {image && (
-                        <img
-                            src={image}
-                            alt=""
-                            onError={e => { e.currentTarget.style.display = 'none' }}
-                        />
-                    )}
-                </div>
-                <div className="award-text">
-                    {name ? (
-                        <>
-                            <div className="award-name">{name}</div>
-                        </>
-                    ) : (
-                        <div className="award-unset">Not set</div>
-                    )}
-                </div>
+        <article className={`award-card ${variant}`}>
+            {image && (
+                <>
+                    <div
+                        className="award-art"
+                        style={{ backgroundImage: `url("${image}")` }}
+                    />
+                    <div className="award-scrim" />
+                </>
+            )}
+            <div className="award-content">
+                <div className="award-label">{label}</div>
+                {name ? (
+                    <>
+                        <div className="award-name">{name}</div>
+                        {sub && <div className="award-sub">{sub}</div>}
+                    </>
+                ) : (
+                    <div className="award-unset">Not set</div>
+                )}
             </div>
         </article>
     )
 }
 
-export default function CycleStats({ cycleId, nominations = [] }) {
+export default function CycleStats({ cycleId }) {
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+
+    // Shares a cache entry with the home hero, which asks for the same
+    // highlights when this cycle is the one it features.
+    const { data: highlights } = useQuery(highlightsQuery(cycleId))
 
     useEffect(() => {
         if (!cycleId) return
@@ -102,6 +122,8 @@ export default function CycleStats({ cycleId, nominations = [] }) {
                     const data = await statsRes.json()
                     setStats(data)
                 }
+                // A fresh snapshot changes the hero cards and the archive grid.
+                invalidateAll()
             } else {
                 setError('Failed to compute stats')
             }
@@ -141,19 +163,27 @@ export default function CycleStats({ cycleId, nominations = [] }) {
         <div className="awards">
             <div className="awards-grid">
                 <AwardCard
+                    variant="award-track"
                     label="Track of the Cycle"
                     image={getAlbumImage(stats.trackOfCycle)}
                     name={stats.trackOfCycle?.title}
+                    sub={stats.trackOfCycle?.album?.title}
                 />
                 <AwardCard
+                    variant="award-artist"
                     label="Artist of the Cycle"
                     image={stats.artistOfCycle?.imageUrl}
                     name={stats.artistOfCycle?.name}
+                    sub={stats.artistOfCycle?.winNumber
+                        ? `${ordinal(stats.artistOfCycle.winNumber)} win`
+                        : null}
                 />
                 <AwardCard
+                    variant="award-debut"
                     label="Best New Artist"
                     image={stats.bestNewArtist?.imageUrl}
                     name={stats.bestNewArtist?.name}
+                    sub={debutSubline(stats.bestNewArtist, highlights?.debuts)}
                 />
             </div>
 

@@ -235,6 +235,75 @@ export async function computeArtistsWithLongestCycleStreak(limit = 20) {
     }));
 }
 
+// The Big Three Sweep: artists who have won Track of the Cycle, Artist of the
+// Cycle and Best New Artist at some point — not necessarily in the same cycle.
+// Track of the Cycle is credited to every artist on the winning track, so a
+// feature counts the same as a lead credit, matching the track-of-cycle board.
+export async function computeBigThreeSweepArtists(limit = 20) {
+  const results = await db.$queryRaw`
+    WITH toc AS (
+      SELECT
+          tta."artistId"                AS "artistId",
+          COUNT(DISTINCT s."cycleId")   AS "wins",
+          MIN(s."cycleId")              AS "firstCycleId"
+      FROM "StatsSnapshot" s
+      JOIN "TrackToArtist" tta      ON tta."trackId" = s."trackOfCycleId"
+      WHERE s."trackOfCycleId" IS NOT NULL
+      GROUP BY tta."artistId"
+    ),
+    aoc AS (
+      SELECT
+          s."artistOfCycleId"           AS "artistId",
+          COUNT(DISTINCT s."cycleId")   AS "wins",
+          MIN(s."cycleId")              AS "firstCycleId"
+      FROM "StatsSnapshot" s
+      WHERE s."artistOfCycleId" IS NOT NULL
+      GROUP BY s."artistOfCycleId"
+    ),
+    bna AS (
+      SELECT
+          s."bestNewArtistId"           AS "artistId",
+          COUNT(DISTINCT s."cycleId")   AS "wins",
+          MIN(s."cycleId")              AS "firstCycleId"
+      FROM "StatsSnapshot" s
+      WHERE s."bestNewArtistId" IS NOT NULL
+      GROUP BY s."bestNewArtistId"
+    ),
+    -- The inner joins are the achievement: an artist missing any one of the
+    -- three drops out entirely. The sweep completes on the later of the three
+    -- first wins, so GREATEST of those is the cycle that finished the set.
+    sweeps AS (
+      SELECT
+          a.id            AS "subjectId",
+          a."name"        AS "subjectName",
+          a."imageUrl"    AS "subjectImage",
+          toc."wins"      AS "trackOfCycleWins",
+          aoc."wins"      AS "artistOfCycleWins",
+          bna."wins"      AS "bestNewArtistWins",
+          GREATEST(toc."firstCycleId", aoc."firstCycleId", bna."firstCycleId") AS "sweptAtCycleId"
+      FROM "Artist" a
+      JOIN toc            ON toc."artistId" = a.id
+      JOIN aoc            ON aoc."artistId" = a.id
+      JOIN bna            ON bna."artistId" = a.id
+    )
+    SELECT
+        sw.*,
+        c."name"          AS "sweptAtCycleName"
+    FROM sweeps sw
+    LEFT JOIN "Cycle" c   ON c.id = sw."sweptAtCycleId"
+    ORDER BY sw."sweptAtCycleId" ASC, sw."subjectName" ASC
+    LIMIT ${limit};
+  `;
+
+  return results.map(row => ({
+    ...row,
+    trackOfCycleWins: Number(row.trackOfCycleWins),
+    artistOfCycleWins: Number(row.artistOfCycleWins),
+    bestNewArtistWins: Number(row.bestNewArtistWins),
+    sweptAtCycleId: Number(row.sweptAtCycleId)
+  }));
+}
+
 export async function computeAlbumsWithMostTrackOfCycle(limit = 20) {
   const results = await db.$queryRaw`
     SELECT

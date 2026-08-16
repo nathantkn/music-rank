@@ -4,6 +4,7 @@ import '../styles/EditNominations.css'
 import Breadcrumb from '../components/Breadcrumb'
 import { getAlbumImage, getArtistsString } from '../lib/nominations'
 import { useToast } from '../components/Toast'
+import { invalidateAll } from '../lib/queryClient'
 
 const LONG_PRESS_MS = 280
 
@@ -206,6 +207,7 @@ export default function EditNominations() {
             setOrder(list => list.filter(nom => nom.id !== nomination.id))
             setRemoveIdx(null)
             setFocusIdx(null)
+            invalidateAll()
             toast(`“${title}” removed from ${cycle.name}. This one saved immediately.`, 'warn')
         } catch (err) {
             console.error('Error deleting nomination:', err)
@@ -237,6 +239,9 @@ export default function EditNominations() {
             if (!statsResponse.ok) {
                 throw new Error('Failed to update stats')
             }
+
+            // Ranks and the recomputed snapshot both feed the home hero.
+            invalidateAll()
 
             const pickedName = artists.find(a => String(a.id) === pickedArtist)?.name
             navigate(`/cycles/${cycleId}`)

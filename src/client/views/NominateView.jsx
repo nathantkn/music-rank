@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../styles/NominateView.css'
 import { useToast } from '../components/Toast'
+import { invalidateAll } from '../lib/queryClient'
 
 // "7 Jun 2024" — falls back to whatever the API gave us
 function formatReleaseDate(value) {
@@ -181,6 +182,8 @@ export default function NominateView() {
 
       if (res.ok) {
         setNominatedTracks(prev => new Set([...prev, track.spotifyId]))
+        // The home hero and cycles archive cache this cycle's nominations.
+        invalidateAll()
         toast(`“${track.name}” added to ${activeCycle.name}, unranked.`)
       } else {
         const errorText = await res.text()
