@@ -184,6 +184,16 @@ export async function computeArtistDirectory() {
       a."imageUrl"                        AS "imageUrl",
       COUNT(DISTINCT n.id)::int           AS "nominations",
       COUNT(DISTINCT n."cycleId")::int    AS "cyclesAppeared",
+
+      -- Broken out by award rather than pre-summed, so the directory can filter
+      -- to one award's winners without a second query. "wins" is still the
+      -- total, because that's what the card and the sort want.
+      (SELECT COUNT(*)
+         FROM "StatsSnapshot" s
+         JOIN "TrackToArtist" tta2 ON tta2."trackId" = s."trackOfCycleId"
+        WHERE tta2."artistId" = a.id)::int                                            AS "trackOfCycle",
+      (SELECT COUNT(*) FROM "StatsSnapshot" s WHERE s."artistOfCycleId" = a.id)::int  AS "artistOfCycle",
+      (SELECT COUNT(*) FROM "StatsSnapshot" s WHERE s."bestNewArtistId" = a.id)::int  AS "bestNewArtist",
       (
           (SELECT COUNT(*)
              FROM "StatsSnapshot" s

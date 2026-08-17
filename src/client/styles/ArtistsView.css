@@ -22,6 +22,7 @@
 }
 
 .artists-filter,
+.artists-award,
 .artists-sort {
   padding: 10px 14px;
   border-radius: var(--r-control);
@@ -40,11 +41,13 @@
 }
 
 .artists-filter:focus,
+.artists-award:focus,
 .artists-sort:focus {
   outline: none;
   border-color: var(--accent-soft-border);
 }
 
+.artists-award,
 .artists-sort {
   cursor: pointer;
 }

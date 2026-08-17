@@ -19,6 +19,29 @@ const SORTS = {
   name: { label: 'Name (A–Z)', compare: (a, b) => a.name.localeCompare(b.name) },
 }
 
+// The directory payload carries each award's count separately, so narrowing to
+// one award's winners is a predicate over data already in memory rather than a
+// round trip. `noun` is for the empty state, which has to name what came back
+// empty — "No Artist of the Cycle winners yet" beats a bare "no matches".
+const AWARDS = {
+  all: { label: 'All artists', noun: 'artist', match: () => true },
+  bestNewArtist: {
+    label: 'Best New Artist',
+    noun: 'Best New Artist winner',
+    match: a => a.bestNewArtist > 0,
+  },
+  trackOfCycle: {
+    label: 'Track of the Cycle',
+    noun: 'Track of the Cycle winner',
+    match: a => a.trackOfCycle > 0,
+  },
+  artistOfCycle: {
+    label: 'Artist of the Cycle',
+    noun: 'Artist of the Cycle winner',
+    match: a => a.artistOfCycle > 0,
+  },
+}
+
 // First, last, and a step either side of the current page, so the control keeps
 // its width whether there are nine pages or ninety. Gaps are strings rather
 // than nulls so every child has a stable key.
@@ -73,21 +96,29 @@ function ArtistCard({ artist }) {
 
 export default function ArtistsView() {
   const [filter, setFilter] = useState('')
+  const [award, setAward] = useState('all')
   const [sort, setSort] = useState('nominations')
   const [page, setPage] = useState(1)
 
   const { data: artists = [], isPending, isError } = useQuery(artistsQuery())
 
+  // The award pool, before the name box narrows it further: the count the
+  // empty state and the "filtered from" line compare against.
+  const pool = useMemo(
+    () => (award === 'all' ? artists : artists.filter(AWARDS[award].match)),
+    [artists, award]
+  )
+
   const shown = useMemo(() => {
     const needle = filter.trim().toLowerCase()
     const matched = needle
-      ? artists.filter(a => a.name.toLowerCase().includes(needle))
-      : artists
+      ? pool.filter(a => a.name.toLowerCase().includes(needle))
+      : pool
     // Ties fall back to name so the grid doesn't reshuffle between sorts.
     return [...matched].sort(
       (a, b) => SORTS[sort].compare(a, b) || a.name.localeCompare(b.name)
     )
-  }, [artists, filter, sort])
+  }, [pool, filter, sort])
 
   const pageCount = Math.max(1, Math.ceil(shown.length / PAGE_SIZE))
   // Clamped rather than reset: a filter that narrows the list past the current
@@ -95,6 +126,8 @@ export default function ArtistsView() {
   const current = Math.min(page, pageCount)
   const start = (current - 1) * PAGE_SIZE
   const pageItems = shown.slice(start, start + PAGE_SIZE)
+  // What the count line and the empty state call the things in the grid.
+  const { noun } = AWARDS[award]
 
   // Paging swaps the whole grid out from under you, so it goes back to the top
   // rather than leaving you mid-list in unrelated names.
@@ -125,6 +158,16 @@ export default function ArtistsView() {
             aria-label="Filter artists by name"
           />
           <select
+            className="artists-award"
+            value={award}
+            onChange={e => narrow(() => setAward(e.target.value))}
+            aria-label="Filter artists by award"
+          >
+            {Object.entries(AWARDS).map(([key, { label }]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+          <select
             className="artists-sort"
             value={sort}
             onChange={e => narrow(() => setSort(e.target.value))}
@@ -145,13 +188,15 @@ export default function ArtistsView() {
         <div className="artists-empty">
           {artists.length === 0
             ? 'No artists yet — nominate a track to get started.'
-            : `No artist matches “${filter.trim()}”.`}
+            : pool.length === 0
+              ? `No ${noun}s yet.`
+              : `No ${noun} matches “${filter.trim()}”.`}
         </div>
       ) : (
         <>
           <p className="artists-count">
             Showing {start + 1}–{start + pageItems.length} of {shown.length}
-            {' '}{shown.length === 1 ? 'artist' : 'artists'}
+            {' '}{shown.length === 1 ? noun : `${noun}s`}
             {shown.length !== artists.length && ` (filtered from ${artists.length})`}
           </p>
 
