@@ -111,6 +111,17 @@
   color: var(--text-4);
 }
 
+/* The Records page's --gold-dim, spelled out rather than referenced: that
+   palette is declared on .stats-page and only resolves inside that subtree,
+   which is deliberate (see StatsPage.css). Same value, same job — a warm tint
+   on small mono metadata, as on the sweep wall's cycle line. */
+.artist-card-wins {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #A08E63;
+}
+
 /* Pager */
 
 .artists-pager {

@@ -97,14 +97,14 @@
   font-size: 12px;
   font-weight: 500;
   line-height: 1.3;
-  color: #E8EDF5;
+  color: var(--gold-dim);
   text-wrap: pretty;
 }
 
 .sweep-when {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--gold-dim);
+  color: #E8EDF5;
   margin-top: 3px;
   max-width: 100%;
   overflow: hidden;

@@ -59,8 +59,14 @@ function ArtistCard({ artist }) {
       <p className="artist-card-meta">
         {artist.nominations} {artist.nominations === 1 ? 'nom' : 'noms'}
         {' · '}{artist.cyclesAppeared} {artist.cyclesAppeared === 1 ? 'cycle' : 'cycles'}
-        {artist.wins > 0 && <> · {artist.wins} {artist.wins === 1 ? 'win' : 'wins'}</>}
       </p>
+      {/* Its own line and its own colour — a win is the one thing on this card
+          that isn't just a tally, and the gold is how the Records page says so. */}
+      {artist.wins > 0 && (
+        <p className="artist-card-wins">
+          {artist.wins} {artist.wins === 1 ? 'win' : 'wins'}
+        </p>
+      )}
     </Link>
   )
 }
@@ -107,9 +113,6 @@ export default function ArtistsView() {
       <div className="artists-head">
         <div>
           <h1 className="page-title">Artists</h1>
-          <p className="page-sub">
-            Everyone who has ever been nominated, and what they have to show for it.
-          </p>
         </div>
 
         <div className="artists-controls">
