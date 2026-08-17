@@ -51,6 +51,14 @@ export const bigThreeSweepQuery = () => ({
   queryFn: () => getJson('/api/achievements/big-three-sweep'),
 })
 
+// One entry per board, keyed by metric. The Records page mounts nine of these
+// at once, so they cache and expire independently — and the collapsed preview
+// and the expanded table read the same entry rather than fetching twice.
+export const leaderboardQuery = (metric) => ({
+  queryKey: ['leaderboards', metric],
+  queryFn: () => getJson(`/api/leaderboards/${metric}`),
+})
+
 // Both of the per-cycle queries stay parked until a cycle id is known, so the
 // caller can declare them unconditionally and let the hook handle the gate.
 export const nominationsQuery = (cycleId) => ({

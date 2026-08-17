@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Leaderboard, { formatValue } from './Leaderboard.jsx';
+import { leaderboardQuery } from '../lib/api.js';
 import '../styles/LeaderboardPreview.css';
 
 function LeaderboardPreview({
@@ -11,31 +12,13 @@ function LeaderboardPreview({
     isExpanded,
     onToggle,
 }) {
-    // One fetch per board — the collapsed preview and the expanded table share it
-    const [rows, setRows] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        async function fetchBoard() {
-            setLoading(true);
-
-            try {
-                const res = await fetch(`/api/leaderboards/${metric}`);
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text || `HTTP ${res.status}`);
-                }
-                const data = await res.json();
-                setRows(data);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchBoard();
-    }, [metric]);
+    // One query per board — the collapsed preview and the expanded table share
+    // it, and so does every later visit to this page.
+    //
+    // isPending rather than isFetching on purpose: a board that already has
+    // rows should keep showing them while a background refresh runs, instead of
+    // blanking out to "Loading…" on every return to the page.
+    const { data: rows, isPending } = useQuery(leaderboardQuery(metric));
 
     const firstPlace = rows && rows.length > 0 ? rows[0] : null;
 
@@ -49,7 +32,7 @@ function LeaderboardPreview({
                 </div>
 
                 <div className="board-leader">
-                    {loading ? (
+                    {isPending ? (
                         <span className="board-muted">Loading…</span>
                     ) : firstPlace ? (
                         <>
@@ -80,7 +63,7 @@ function LeaderboardPreview({
             </div>
 
             {isExpanded && (
-                <Leaderboard rows={rows} unit={unit} format={format} loading={loading} />
+                <Leaderboard rows={rows} unit={unit} format={format} loading={isPending} />
             )}
         </div>
     );

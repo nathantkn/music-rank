@@ -170,69 +170,63 @@ export async function computeArtistsWithMostCycleAppearances(limit = 20) {
   }));
 }
 
+// A streak is consecutive *positions* in the id-ordered list of cycles, not
+// consecutive ids — a deleted cycle leaves a gap in the ids that shouldn't break
+// anyone's run. That's why the cycles are numbered by ROW_NUMBER first.
+//
+// This used to pull every artist-cycle appearance back to Node — around 1500
+// rows over two round trips — and walk all 102 cycles per artist in JS. The
+// counting was never the expensive part; the two round trips and the volume
+// were. Postgres does the same work as a gaps-and-islands query and returns
+// only the rows the board actually shows.
 export async function computeArtistsWithLongestCycleStreak(limit = 20) {
-  const cycles = await db.cycle.findMany({ orderBy: { id: 'asc' }, select: { id: true } });
-  const cycleOrder = cycles.map(c => c.id);
-
-  const appearances = await db.$queryRaw`
+  const results = await db.$queryRaw`
+    WITH cycle_pos AS (
+      SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS pos
+      FROM "Cycle"
+    ),
+    appearances AS (
+      -- One row per artist per cycle they charted in. DISTINCT because an
+      -- artist can hold several nominations in the same cycle.
+      SELECT DISTINCT
+        tta."artistId" AS "artistId",
+        cp.pos         AS pos
+      FROM "Nomination" n
+      JOIN "TrackToArtist" tta  ON tta."trackId" = n."trackId"
+      JOIN cycle_pos cp         ON cp.id = n."cycleId"
+    ),
+    islands AS (
+      -- Within one artist, pos climbs by 1 across a run and the row number
+      -- climbs by 1 too, so their difference is constant for that run and
+      -- changes the moment a cycle is missed. That difference is the run's id.
+      SELECT
+        "artistId",
+        pos - ROW_NUMBER() OVER (PARTITION BY "artistId" ORDER BY pos) AS grp
+      FROM appearances
+    ),
+    streaks AS (
+      SELECT "artistId", COUNT(*) AS streak
+      FROM islands
+      GROUP BY "artistId", grp
+    )
     SELECT
-      tta."artistId" AS "artistId",
-      n."cycleId"    AS "cycleId",
-      a."name"       AS "subjectName",
-      a."imageUrl"   AS "subjectImage"
-    FROM "Nomination" n
-    JOIN "Track" tr           ON n."trackId" = tr.id
-    JOIN "TrackToArtist" tta  ON tr.id = tta."trackId"
-    JOIN "Artist" a           ON a.id = tta."artistId"
-    GROUP BY tta."artistId", n."cycleId", a."name", a."imageUrl"
-    ORDER BY tta."artistId", n."cycleId";
+      s."artistId"  AS "subjectId",
+      a."name"      AS "subjectName",
+      a."imageUrl"  AS "subjectImage",
+      MAX(s.streak) AS "value"
+    FROM streaks s
+    JOIN "Artist" a ON a.id = s."artistId"
+    GROUP BY s."artistId", a."name", a."imageUrl"
+    -- artistId breaks ties the same way the old stable JS sort did, so the
+    -- board doesn't reshuffle between identical runs.
+    ORDER BY "value" DESC, s."artistId" ASC
+    LIMIT ${limit};
   `;
 
-  const artistToCycles = new Map();
-  for (const row of appearances) {
-    if (!artistToCycles.has(row.artistId)) {
-      artistToCycles.set(row.artistId, {
-        name: row.subjectName,
-        imageUrl: row.subjectImage,
-        cycles: []
-      });
-    }
-    artistToCycles.get(row.artistId).cycles.push(row.cycleId);
-  }
-
-  function longestConsecutiveStreak(cycleIds, allCycles) {
-    const appearancesSet = new Set(cycleIds);
-    let maxStreak = 0, currentStreak = 0;
-    for (const c of allCycles) {
-      if (appearancesSet.has(c)) {
-        currentStreak++;
-        maxStreak = Math.max(maxStreak, currentStreak);
-      } else {
-        currentStreak = 0;
-      }
-    }
-    return maxStreak;
-  }
-
-  const streaks = [];
-
-  for (const [artistId, artistData] of artistToCycles) {
-    const streak = longestConsecutiveStreak(artistData.cycles, cycleOrder);
-    streaks.push({
-      subjectId: artistId,
-      subjectName: artistData.name,
-      subjectImage: artistData.imageUrl,
-      value: streak
-    });
-  }
-
-  return streaks
-    .sort((a, b) => b.value - a.value)
-    .slice(0, limit)
-    .map(row => ({
-      ...row,
-      value: Number(row.value)
-    }));
+  return results.map(row => ({
+    ...row,
+    value: Number(row.value)
+  }));
 }
 
 // The Big Three Sweep: artists who have won Track of the Cycle, Artist of the

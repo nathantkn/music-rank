@@ -14,6 +14,11 @@ export default function CyclesDetail() {
     const [activeCycle, setActiveCycle] = useState(null)
     const [nominations, setNominations] = useState([])
     const [loading, setLoading] = useState(true)
+    // Tracked separately from `loading`, which only covers the cycle lookup.
+    // Without it the page renders the moment /api/cycles lands, while
+    // nominations are still in flight and the list is an empty array — so a
+    // cycle full of tracks flashes "No nominations in this cycle yet" first.
+    const [nominationsLoading, setNominationsLoading] = useState(true)
     const [isEditingName, setIsEditingName] = useState(false)
     const [editedName, setEditedName] = useState('')
     const [confirmingActive, setConfirmingActive] = useState(false)
@@ -22,7 +27,12 @@ export default function CyclesDetail() {
     useEffect(() => {
         if (!cycleId) return
 
+        // Both requests restart when the cycle changes, so both flags reset and
+        // the old cycle's nominations are dropped — otherwise switching cycles
+        // shows the previous chart until the new one arrives.
         setLoading(true)
+        setNominationsLoading(true)
+        setNominations([])
         fetch(`/api/cycles`)
             .then(r => r.json())
             .then(cycles => {
@@ -50,6 +60,7 @@ export default function CyclesDetail() {
             .then(r => r.json())
             .then(setNominations)
             .catch(console.error)
+            .finally(() => setNominationsLoading(false))
     }, [selectedCycle])
 
     // Make cycle active
@@ -144,6 +155,13 @@ export default function CyclesDetail() {
                 </button>
             </div>
         )
+    }
+
+    // Deliberately below the not-found check: a cycle that doesn't exist never
+    // starts the nominations request, so this flag would never clear and the
+    // page would sit on the spinner instead of saying so.
+    if (nominationsLoading) {
+        return <div className="detail-state">Loading cycle…</div>
     }
 
     const rankedCount = rankedOf(nominations).length
