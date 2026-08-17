@@ -152,6 +152,44 @@ a:hover {
   border-color: #3A465C;
 }
 
+/* One colour per award, carried as custom properties so anything showing a win
+   — the cycle award cards, the artist page's award tiles, badges and chips —
+   reads the same. Only the properties live here; each surface styles itself.
+   `soft` (12%) and `line` (30%) are spelled out as rgba rather than derived,
+   so a tile's wash and its border don't depend on colour-mix support. */
+
+.award-track {
+  --award-accent: #5CE1FF;
+  --award-border: #1F3646;
+  --award-soft: rgba(92, 225, 255, 0.12);
+  --award-line: rgba(92, 225, 255, 0.30);
+}
+
+.award-artist {
+  --award-accent: #FFC46B;
+  --award-border: #3A3020;
+  --award-soft: rgba(255, 196, 107, 0.12);
+  --award-line: rgba(255, 196, 107, 0.30);
+}
+
+.award-debut {
+  --award-accent: #B49BFF;
+  --award-border: #2E2A47;
+  --award-soft: rgba(180, 155, 255, 0.12);
+  --award-line: rgba(180, 155, 255, 0.30);
+}
+
+/* Artist names inside chart rows and lists. They take the colour of whatever
+   line they sit in — the accent every other link gets would light up a whole
+   column of names — and only reveal themselves on hover. */
+.artist-link {
+  color: inherit;
+}
+
+.artist-link:hover {
+  color: var(--accent);
+}
+
 .chip-active {
   font-family: var(--font-mono);
   font-size: 10px;

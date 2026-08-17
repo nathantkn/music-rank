@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import './App.css'
 import RankTable, { TopThree } from './components/RankTable'
 import { rankedOf, getArtistsString } from './lib/nominations'
+import { ordinal } from './lib/format'
 import { statsQuery, nominationsQuery, highlightsQuery } from './lib/api'
 
 // A cycle only has something to say once it's been ranked and computed — an
@@ -26,13 +27,6 @@ function findArtistOfCycleNomination(artist, nominations) {
       nom.track?.artistLinks?.some(link => link.artist.id === artist.id)
     )
     .sort((a, b) => a.rank - b.rank)[0] || null
-}
-
-// 1st, 2nd, 3rd, 4th… — the teens are the exception to the last-digit rule
-const ordinal = (n) => {
-  const teens = n % 100
-  if (teens >= 11 && teens <= 13) return `${n}th`
-  return `${n}${{ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'}`
 }
 
 // Main App Component

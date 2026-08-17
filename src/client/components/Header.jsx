@@ -5,10 +5,12 @@ const NAV_ITEMS = [
   { to: '/', label: 'Home' },
   { to: '/cycles', label: 'Cycles' },
   { to: '/nominate', label: 'Nominate' },
-  { to: '/stats', label: 'Stats' },
+  { to: '/artists', label: 'Artists' },
+  { to: '/stats', label: 'Records' },
 ]
 
-// Cycles stays highlighted on the two drill-in routes (/cycles/:id and /cycles/:id/edit).
+// Cycles stays highlighted on the two drill-in routes (/cycles/:id and
+// /cycles/:id/edit), and Artists on /artists/:id.
 function isActive(to, pathname) {
   if (to === '/') return pathname === '/'
   return pathname === to || pathname.startsWith(`${to}/`)

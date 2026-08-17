@@ -12,6 +12,8 @@ import NominateView from './views/NominateView.jsx';
 import CyclesDetail from './views/CyclesDetail.jsx';
 import EditNominations from './views/EditNominations.jsx';
 import StatsPage from './views/StatsPage.jsx';
+import ArtistsView from './views/ArtistsView.jsx';
+import ArtistDetail from './views/ArtistDetail.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -25,6 +27,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/nominate" element={<NominateView />} />
             <Route path="/cycles/:cycleId" element={<CyclesDetail />} />
             <Route path="/cycles/:cycleId/edit" element={<EditNominations />} />
+            <Route path="/artists" element={<ArtistsView />} />
+            <Route path="/artists/:artistId" element={<ArtistDetail />} />
             <Route path="/stats" element={<StatsPage />} />
           </Routes>
         </ToastProvider>

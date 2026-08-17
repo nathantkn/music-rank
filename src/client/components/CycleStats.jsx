@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import '../styles/CycleStats.css'
 import { getAlbumImage } from '../lib/nominations'
 import { highlightsQuery } from '../lib/api'
+import { ordinal } from '../lib/format'
 import { invalidateAll } from '../lib/queryClient'
 
 // "9 Aug 2026, 21:14"
@@ -19,18 +21,6 @@ function formatComputedAt(value) {
     })
 }
 
-// "3rd win" — 1st/2nd/3rd, then th, with the 11th–13th exception.
-function ordinal(n) {
-    const teens = n % 100
-    if (teens >= 11 && teens <= 13) return `${n}th`
-    switch (n % 10) {
-        case 1: return `${n}st`
-        case 2: return `${n}nd`
-        case 3: return `${n}rd`
-        default: return `${n}th`
-    }
-}
-
 // "Out of 4 new artists" — the field the pick was made from, counted the same
 // way the home hero's New Blood card counts it: artists on this cycle with no
 // nomination in any earlier one.
@@ -43,11 +33,17 @@ function debutSubline(artist, debuts) {
 }
 
 // `variant` carries the award's accent and border via custom properties — see
-// CycleStats.css. The art fills the card, so a winner with no image falls back
+// index.css. The art fills the card, so a winner with no image falls back
 // to the bare panel rather than a gap.
-function AwardCard({ variant, label, image, name, sub }) {
+//
+// `to` makes the whole card the link. It's a stretched overlay rather than a
+// wrapper because the card's layout — the absolutely positioned art and scrim
+// inside a square — is built on the article being the positioned ancestor.
+// Track of the Cycle doesn't get one: /api/cycles/:id/stats flattens that
+// track's artists to a joined string with no ids to link to.
+function AwardCard({ variant, label, image, name, sub, to }) {
     return (
-        <article className={`award-card ${variant}`}>
+        <article className={`award-card ${variant} ${to ? 'is-linked' : ''}`}>
             {image && (
                 <>
                     <div
@@ -68,6 +64,9 @@ function AwardCard({ variant, label, image, name, sub }) {
                     <div className="award-unset">Not set</div>
                 )}
             </div>
+            {to && (
+                <Link className="award-hit" to={to} aria-label={`${name} — ${label}`} />
+            )}
         </article>
     )
 }
@@ -177,6 +176,7 @@ export default function CycleStats({ cycleId }) {
                     sub={stats.artistOfCycle?.winNumber
                         ? `${ordinal(stats.artistOfCycle.winNumber)} win`
                         : null}
+                    to={stats.artistOfCycle && `/artists/${stats.artistOfCycle.id}`}
                 />
                 <AwardCard
                     variant="award-debut"
@@ -184,6 +184,7 @@ export default function CycleStats({ cycleId }) {
                     image={stats.bestNewArtist?.imageUrl}
                     name={stats.bestNewArtist?.name}
                     sub={debutSubline(stats.bestNewArtist, highlights?.debuts)}
+                    to={stats.bestNewArtist && `/artists/${stats.bestNewArtist.id}`}
                 />
             </div>
 

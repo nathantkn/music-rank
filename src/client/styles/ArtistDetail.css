@@ -1,0 +1,585 @@
+/* Artist detail — header, the three award tiles, and the cycle ledger.
+   Award colours arrive as --award-accent / --award-soft / --award-line from the
+   .award-* variants in index.css; nothing here hardcodes them. */
+
+.artist-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px var(--gutter) 80px;
+}
+
+/* Loading and not-found stand alone without a breadcrumb — its second crumb is
+   the artist's name, and neither state has one yet. The extra top padding is
+   what the breadcrumb would otherwise occupy. */
+.artist-page-state {
+  padding-top: 40px;
+}
+
+.artist-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--well);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-3);
+}
+
+.artist-loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+.artist-missing {
+  padding: 44px 24px;
+  border-radius: 18px;
+  border: 1px dashed var(--border-strong);
+  background: var(--well);
+  text-align: center;
+}
+
+.artist-missing-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.artist-missing-copy {
+  max-width: 46ch;
+  margin: 0 auto 18px;
+  font-size: 14px;
+  color: var(--text-3);
+  text-wrap: pretty;
+}
+
+.artist-missing-back {
+  display: inline-block;
+  padding: 11px 18px;
+  border-radius: var(--r-control);
+  border: 1px solid var(--border-strong);
+  background: var(--panel-alt);
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.artist-missing-back:hover {
+  color: var(--text);
+  border-color: #3A465C;
+}
+
+/* Header */
+
+.artist-head {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.artist-portrait {
+  width: 132px;
+  height: 132px;
+  border-radius: 18px;
+  border: 1px solid #202A3A;
+  overflow: hidden;
+}
+
+/* Missing portraits are common — only one of the two artist-import paths
+   fetches an image — so the fallback is styled as a deliberate state rather
+   than a hole. */
+.artist-portrait.is-monogram {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(120% 120% at 30% 18%, #212B3E, #151C29);
+}
+
+.artist-portrait-initial {
+  font-family: var(--font-mono);
+  font-size: 52px;
+  line-height: 1;
+  color: #46536B;
+}
+
+.artist-head-body {
+  min-width: 0;
+}
+
+.artist-name {
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  text-wrap: pretty;
+}
+
+.artist-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  margin-top: 18px;
+}
+
+.artist-stat-value {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.artist-stat-label {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+
+/* Awards — three tiles, fixed height. Equal size is the point: the row keeps
+   its shape whether the artist won seventeen of something or none. */
+
+.award-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.award-tile {
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid var(--award-line);
+  background:
+    radial-gradient(120% 140% at 88% -20%, var(--award-soft) 0%, transparent 60%),
+    var(--panel);
+}
+
+/* A never-won award holds its slot and its exact dimensions. */
+.award-tile.is-empty {
+  opacity: 0.62;
+  background: var(--bg-raised);
+  border-color: var(--border);
+}
+
+.award-tile-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--award-accent);
+}
+
+.award-tile.is-empty .award-tile-label {
+  color: #4B5871;
+}
+
+.award-tile-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.award-tile-count {
+  font-family: var(--font-mono);
+  font-size: 40px;
+  line-height: 1;
+  color: var(--award-accent);
+}
+
+.award-tile.is-empty .award-tile-count {
+  color: #38455B;
+}
+
+.award-tile-unit {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-4);
+}
+
+.award-tile-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* One line only — cycle names are freeform and some of them are sentences. */
+.award-tile-cycle {
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.award-tile-cycle:hover {
+  color: var(--accent);
+}
+
+.award-tile-more {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--award-line);
+  background: transparent;
+  color: var(--award-accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.award-tile-more:hover {
+  border-color: var(--award-accent);
+}
+
+.award-tile-never {
+  font-size: 13px;
+  color: var(--text-5);
+}
+
+/* The rest of the wins open here, under the whole row rather than inside the
+   tile — expanding one tile in place would push the other two out of line. */
+.award-panel {
+  margin-top: 12px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: var(--well);
+  border: 1px solid var(--award-line);
+  animation: panelIn 200ms ease-out;
+}
+
+.award-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.award-panel-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--award-accent);
+}
+
+.award-panel-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-4);
+}
+
+.award-panel-close {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--text-4);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.award-panel-close:hover {
+  color: var(--text);
+}
+
+.award-panel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.award-panel-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--award-line);
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.award-panel-chip:hover {
+  color: var(--award-accent);
+  border-color: var(--award-accent);
+}
+
+/* History */
+
+.history-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 40px 0 8px;
+}
+
+.history-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.history-summary {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-4);
+}
+
+.history-filters {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.history-filter {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid #232E42;
+  background: transparent;
+  color: var(--text-4);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.history-filter.is-active {
+  background: var(--border);
+  border-color: #3A465C;
+  color: var(--text-2);
+}
+
+.history-showing {
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-5);
+}
+
+/* A ledger, not a stack of cards: the cycle's identity sits in the left gutter
+   beside its nominations instead of in a header above them, so a cycle holding
+   one nomination is one row tall. Most of them hold one. */
+
+.ledger-row {
+  display: grid;
+  grid-template-columns: 212px 1fr;
+  gap: 24px;
+  padding: 12px 0;
+  border-top: 1px solid var(--hairline);
+}
+
+/* Nudged down to sit on the first nomination's baseline rather than its box. */
+.ledger-gutter {
+  padding-top: 6px;
+  min-width: 0;
+}
+
+.ledger-cycle-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Wraps rather than truncates — the name is the only thing identifying the row
+   and the names are freeform. */
+.ledger-cycle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #E4EAF3;
+}
+
+.ledger-cycle:hover {
+  color: var(--accent);
+}
+
+.ledger-active {
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ledger-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.ledger-badge {
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: var(--award-soft);
+  border: 1px solid var(--award-line);
+  color: var(--award-accent);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.ledger-count {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-5);
+}
+
+.nom-row {
+  display: grid;
+  grid-template-columns: 40px 40px 1fr 230px;
+  align-items: center;
+  gap: 14px;
+  padding: 5px 0;
+  border-radius: 10px;
+}
+
+.nom-row:hover {
+  background: #141B29;
+}
+
+.nom-rank {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--text-3);
+}
+
+.nom-rank.is-first {
+  color: var(--accent);
+}
+
+/* An unranked nomination gets no numeral — the capsule stands in for the
+   position it hasn't been given, the way the chart's unranked well does. */
+.nom-unranked {
+  display: inline-block;
+  width: 22px;
+  height: 12px;
+  border: 1px dashed #3A465C;
+  border-radius: 999px;
+}
+
+.nom-art {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+}
+
+.nom-text {
+  min-width: 0;
+}
+
+.nom-title {
+  font-size: 15px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nom-with {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nom-co {
+  color: var(--text-3);
+}
+
+.nom-co:hover {
+  color: var(--accent);
+}
+
+.nom-album {
+  font-size: 13px;
+  color: var(--text-5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger-empty {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px dashed var(--border-strong);
+  background: var(--well);
+  font-size: 13px;
+  color: var(--text-4);
+}
+
+.ledger-empty-page {
+  margin-top: 12px;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .artist-page {
+    padding: 20px var(--gutter-narrow) 64px;
+  }
+
+  .artist-head {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .award-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* The gutter becomes a heading band over its own rows. */
+  .ledger-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .ledger-gutter {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 0;
+  }
+
+  .ledger-badges,
+  .ledger-count {
+    margin-top: 0;
+  }
+
+  /* The album column goes first — the title line already names the track, and
+     the rank has to stay. */
+  .nom-row {
+    grid-template-columns: 34px 36px 1fr;
+  }
+
+  .nom-art {
+    width: 36px;
+    height: 36px;
+  }
+
+  .nom-album {
+    display: none;
+  }
+}

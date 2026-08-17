@@ -24,6 +24,28 @@ export const statsQuery = () => ({
   },
 })
 
+export const artistsQuery = () => ({
+  queryKey: ['artists'],
+  queryFn: () => getJson('/api/artists'),
+})
+
+// Parked until the route param has been read, same as the per-cycle queries.
+//
+// An id that isn't an artist comes back as null rather than an error, the same
+// way /api/stats treats its 404 as an empty archive. It's a definitive answer,
+// not a failure — routing it through the error path would put the "no such
+// artist" screen behind a retry that a paused or slow network can hold up.
+export const artistQuery = (artistId) => ({
+  queryKey: ['artist', artistId],
+  queryFn: async () => {
+    const res = await fetch(`/api/artists/${artistId}`)
+    if (res.status === 404) return null
+    if (!res.ok) throw new Error(`/api/artists/${artistId} failed: HTTP ${res.status}`)
+    return res.json()
+  },
+  enabled: artistId != null,
+})
+
 export const bigThreeSweepQuery = () => ({
   queryKey: ['achievements', 'big-three-sweep'],
   queryFn: () => getJson('/api/achievements/big-three-sweep'),

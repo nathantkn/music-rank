@@ -1,0 +1,218 @@
+/* Artist directory — a searchable grid, one card per artist. */
+
+.artists-view {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 36px var(--gutter) 80px;
+}
+
+.artists-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.artists-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.artists-filter,
+.artists-sort {
+  padding: 10px 14px;
+  border-radius: var(--r-control);
+  border: 1px solid var(--border-strong);
+  background: var(--panel-alt);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.artists-filter {
+  min-width: 220px;
+}
+
+.artists-filter::placeholder {
+  color: var(--text-5);
+}
+
+.artists-filter:focus,
+.artists-sort:focus {
+  outline: none;
+  border-color: var(--accent-soft-border);
+}
+
+.artists-sort {
+  cursor: pointer;
+}
+
+.artists-count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-4);
+  margin-bottom: 16px;
+}
+
+.artists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 18px 14px;
+}
+
+.artist-card {
+  display: block;
+  padding: 14px;
+  border-radius: var(--r-card);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  min-width: 0;
+}
+
+.artist-card:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+  background: var(--panel-alt);
+}
+
+/* Square rather than round — these are the same 1:1 portraits the award cards
+   show, and the circle is reserved for the sweep wall. */
+.artist-card-art {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--r-control);
+  margin-bottom: 12px;
+  display: grid;
+  place-items: center;
+}
+
+.artist-card-initial {
+  font-size: 34px;
+  font-weight: 600;
+  color: var(--text-4);
+}
+
+/* Two lines rather than an ellipsis — a truncated artist name is worse than a
+   slightly taller card. */
+.artist-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+
+.artist-card-meta {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-4);
+}
+
+/* Pager */
+
+.artists-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 32px;
+}
+
+.pager-pages {
+  display: flex;
+  gap: 6px;
+}
+
+.pager-step,
+.pager-page {
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--panel-alt);
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.pager-step {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Numerals are mono everywhere else in the app; the page numbers are no
+   exception, and it keeps every button the same width. */
+.pager-page {
+  min-width: 34px;
+  padding: 8px 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.pager-step:hover:not(:disabled),
+.pager-page:hover:not(.is-current) {
+  color: var(--text);
+  border-color: #3A465C;
+}
+
+.pager-page.is-current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+.pager-step:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pager-gap {
+  align-self: end;
+  padding: 0 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-5);
+}
+
+.artists-empty {
+  padding: 60px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-4);
+  border-radius: var(--r-card);
+  border: 1px solid var(--hairline);
+  background: var(--well);
+}
+
+@media (max-width: 760px) {
+  .artists-view {
+    padding: 24px var(--gutter-narrow) 64px;
+  }
+
+  .artists-controls {
+    width: 100%;
+  }
+
+  .artists-filter {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .artists-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  /* Prev/Next carry the load on a narrow screen; the numbers wrap under them
+     rather than squeezing the two controls that matter. */
+  .artists-pager {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .pager-pages {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+  }
+}

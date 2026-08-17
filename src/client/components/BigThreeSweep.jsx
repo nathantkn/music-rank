@@ -1,13 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { bigThreeSweepQuery } from '../lib/api.js';
+import { initial } from '../lib/artists.js';
 import '../styles/BigThreeSweep.css';
-
-// Array.from, not name[0] — indexing a string splits surrogate pairs, so names
-// outside the BMP would render half a character.
-function initial(name) {
-    return (Array.from(name ?? '')[0] ?? '?').toUpperCase();
-}
 
 function SweepMember({ artist }) {
     // A broken image URL falls back to the monogram rather than a hole in the

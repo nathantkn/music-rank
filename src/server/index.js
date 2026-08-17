@@ -20,6 +20,11 @@ import { recomputeStatsForCycle } from './services/statsService.js';
 import { computeCycleHighlights } from './services/highlightsService.js';
 
 import {
+  computeArtistProfile,
+  computeArtistDirectory,
+} from './services/artistService.js';
+
+import {
   computeArtistsWithMostTrackOfCycle,
   computeArtistsWithMostArtistOfCycle,
   computeArtistsWithMostNominations,
@@ -479,6 +484,37 @@ app.get('/api/achievements/big-three-sweep', async (req, res, next) => {
   try {
     const data = await computeBigThreeSweepArtists(20);
     res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 7) ARTISTS
+// Registered before the static handler below — the catch-all it installs in
+// production would answer these with index.html otherwise.
+
+app.get('/api/artists', async (req, res, next) => {
+  try {
+    const data = await computeArtistDirectory();
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/artists/:id', async (req, res, next) => {
+  try {
+    const artistId = Number(req.params.id);
+    if (!Number.isInteger(artistId)) {
+      return res.status(400).json({ error: 'Artist id must be an integer.' });
+    }
+
+    const profile = await computeArtistProfile(artistId);
+    if (!profile) {
+      return res.status(404).json({ error: 'Artist not found.' });
+    }
+
+    res.json(profile);
   } catch (err) {
     next(err);
   }

@@ -1,4 +1,5 @@
 import '../styles/RankTable.css'
+import ArtistNames from './ArtistNames'
 import { getAlbumImage, getArtistsString, rankedOf, unrankedOf } from '../lib/nominations'
 
 // Missing artwork falls back to a bare tile at the same size and radius.
@@ -40,7 +41,7 @@ export function TopThree({ nominations = [] }) {
           </div>
           <div>
             <div className="top3-title">{nom.track?.title || nom.trackId}</div>
-            <div className="top3-artist">{getArtistsString(nom.track)}</div>
+            <ArtistNames track={nom.track} className="top3-artist" />
           </div>
         </article>
       ))}
@@ -107,10 +108,10 @@ export default function RankTable({
                 <Artwork src={getAlbumImage(nom.track)} className="chart-thumb" />
                 <div className="chart-song-text">
                   <div className="chart-title">{nom.track?.title || nom.trackId}</div>
-                  <div className="chart-song-sub">{getArtistsString(nom.track)}</div>
+                  <ArtistNames track={nom.track} className="chart-song-sub" />
                 </div>
               </div>
-              <div className="chart-artist">{getArtistsString(nom.track)}</div>
+              <ArtistNames track={nom.track} className="chart-artist" />
               <div className="chart-album">{nom.track?.album?.title || '—'}</div>
             </div>
           ))

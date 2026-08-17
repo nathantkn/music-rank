@@ -7,6 +7,13 @@ export function getArtistsString(track) {
   return track?.artist || 'Unknown Artist'
 }
 
+// The artists behind a track as objects rather than a joined string, for
+// anywhere each name needs to be its own link. Empty for the legacy shape that
+// only carries `track.artist` as text — callers fall back to getArtistsString.
+export function getArtistLinks(track) {
+  return track?.artistLinks?.map(link => link.artist) ?? []
+}
+
 export function getAlbumImage(track) {
   return track?.album?.imageUrl || track?.imageUrl || null
 }

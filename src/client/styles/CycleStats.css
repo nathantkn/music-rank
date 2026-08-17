@@ -9,23 +9,10 @@
 
 /* Each award owns an accent and a border tuned to it, fixed to the slot rather
    than sampled from the art — the colour has to stay the same when the winner
-   changes. The three variants only set the custom properties; every rule below
+   changes. The .award-track / .award-artist / .award-debut variants only set
+   the custom properties, and they live in index.css because the artist page
+   paints its own award tiles in the same three colours; every rule below just
    reads them. */
-
-.award-track {
-  --award-accent: #5CE1FF;
-  --award-border: #1F3646;
-}
-
-.award-artist {
-  --award-accent: #FFC46B;
-  --award-border: #3A3020;
-}
-
-.award-debut {
-  --award-accent: #B49BFF;
-  --award-border: #2E2A47;
-}
 
 /* Square, because the art is: covers and artist portraits both come back from
    Spotify at 1:1, so matching the card to them is what shows the whole image
@@ -72,6 +59,26 @@
 .award-content {
   position: relative;
   min-width: 0;
+}
+
+/* Whole-card hit area for the awards whose winner has a profile. Last child, so
+   it sits above the art, the scrim and the text without needing a z-index. */
+.award-hit {
+  position: absolute;
+  inset: 0;
+}
+
+.award-card.is-linked:hover {
+  border-color: var(--award-accent);
+}
+
+.award-card.is-linked:hover .award-name {
+  color: var(--award-accent);
+}
+
+.award-hit:focus-visible {
+  outline: 2px solid var(--award-accent);
+  outline-offset: -3px;
 }
 
 .award-label {
