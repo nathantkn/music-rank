@@ -16,6 +16,9 @@ COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/dist ./dist
 COPY prisma ./prisma
 COPY src/server ./src/server
+# src/shared holds the error codes the server and client agree on; the server
+# imports it at startup, so leaving it out of the runtime image is a crash loop.
+COPY src/shared ./src/shared
 
 EXPOSE 4000
 CMD ["node", "src/server/index.js"]

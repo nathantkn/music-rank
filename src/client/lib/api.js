@@ -32,6 +32,8 @@ async function toApiError(url, res) {
   })
 }
 
+const UNREACHABLE_STATUSES = new Set([502, 503, 504])
+
 // Drop-in for fetch that notices an unreachable database on the way past. It
 // still hands back the raw Response, so the views that do their own res.ok /
 // status checks keep working as written — they just don't each need to know
@@ -52,12 +54,13 @@ export async function apiFetch(url, options) {
     })
   }
 
-  if (res.status === 503) {
-    // Clone: the caller still owns the body, and reading it here would leave
-    // them with a consumed stream.
-    const body = await res.clone().json().catch(() => null)
-    if (body?.code === DATABASE_UNAVAILABLE) markConnectionDown()
-  }
+  // 502/503/504 all mean "nothing served this, try later" rather than "your
+  // request was wrong" — our own handler's DATABASE_UNAVAILABLE arrives as a
+  // 503, and a container that failed to start comes back as a 502 or 504 from
+  // the load balancer with an HTML body and no code to read. 500 is left out
+  // on purpose: that's a bug in a handler, and one broken endpoint shouldn't
+  // black out the whole app.
+  if (UNREACHABLE_STATUSES.has(res.status)) markConnectionDown()
 
   return res
 }
