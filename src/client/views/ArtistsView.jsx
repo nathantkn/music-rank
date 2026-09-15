@@ -11,10 +11,17 @@ import '../styles/ArtistsView.css'
 // across all of it — but only a page of it is ever mounted.
 const PAGE_SIZE = 60
 
-// The server already sorts by nominations; the other two orders are cheap to
-// do here rather than as extra round trips.
+// The server already sorts by nominations; the other orders are cheap to do
+// here rather than as extra round trips.
 const SORTS = {
   nominations: { label: 'Most nominations', compare: (a, b) => b.nominations - a.nominations },
+  // lastCycleId is the newest cycle the artist was nominated in — see the
+  // directory query. Everyone in the grid has at least one nomination, so it's
+  // never null, but coalesce anyway rather than sort on NaN.
+  recent: {
+    label: 'Recently nominated',
+    compare: (a, b) => (b.lastCycleId ?? 0) - (a.lastCycleId ?? 0),
+  },
   wins: { label: 'Most wins', compare: (a, b) => b.wins - a.wins },
   name: { label: 'Name (A–Z)', compare: (a, b) => a.name.localeCompare(b.name) },
 }

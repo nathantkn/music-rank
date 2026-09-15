@@ -185,6 +185,11 @@ export async function computeArtistDirectory() {
       COUNT(DISTINCT n.id)::int           AS "nominations",
       COUNT(DISTINCT n."cycleId")::int    AS "cyclesAppeared",
 
+      -- Nominations aren't timestamped, so "most recent" means the newest cycle
+      -- the artist turns up in. Cycle ids ascend with the cycles themselves,
+      -- which is what the profile timeline already orders on.
+      MAX(n."cycleId")::int               AS "lastCycleId",
+
       -- Broken out by award rather than pre-summed, so the directory can filter
       -- to one award's winners without a second query. "wins" is still the
       -- total, because that's what the card and the sort want.
