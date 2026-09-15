@@ -6,6 +6,7 @@ import './index.css'
 import { queryClient } from './lib/queryClient.js';
 import App from './App.jsx'
 import Header from './components/Header.jsx';
+import ConnectionGuard from './components/ConnectionGuard.jsx';
 import { ToastProvider } from './components/Toast.jsx';
 import CyclesView from './views/CyclesView.jsx';
 import NominateView from './views/NominateView.jsx';
@@ -20,17 +21,19 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ToastProvider>
-          <Header />
-          <Routes>
-            <Route path="/" element={<App />} />
-            <Route path="/cycles" element={<CyclesView />} />
-            <Route path="/nominate" element={<NominateView />} />
-            <Route path="/cycles/:cycleId" element={<CyclesDetail />} />
-            <Route path="/cycles/:cycleId/edit" element={<EditNominations />} />
-            <Route path="/artists" element={<ArtistsView />} />
-            <Route path="/artists/:artistId" element={<ArtistDetail />} />
-            <Route path="/stats" element={<StatsPage />} />
-          </Routes>
+          <ConnectionGuard>
+            <Header />
+            <Routes>
+              <Route path="/" element={<App />} />
+              <Route path="/cycles" element={<CyclesView />} />
+              <Route path="/nominate" element={<NominateView />} />
+              <Route path="/cycles/:cycleId" element={<CyclesDetail />} />
+              <Route path="/cycles/:cycleId/edit" element={<EditNominations />} />
+              <Route path="/artists" element={<ArtistsView />} />
+              <Route path="/artists/:artistId" element={<ArtistDetail />} />
+              <Route path="/stats" element={<StatsPage />} />
+            </Routes>
+          </ConnectionGuard>
         </ToastProvider>
       </BrowserRouter>
     </QueryClientProvider>

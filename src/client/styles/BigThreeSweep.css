@@ -1,7 +1,6 @@
 /* Big Three Sweep — a wall of faces, not a ranked board. Membership is the whole
    statement, so no counts, no ordering cues, no per-award badges: just everyone
-   who has taken all three, earliest first.
-   Gold tokens come from .stats-page (see StatsPage.css). */
+   who has taken all three, earliest first. */
 
 .sweep {
   margin-bottom: 32px;
@@ -92,7 +91,7 @@
   line-height: 1;
 }
 
-/* Two lines are fine — truncating "Cigarettes After Sex" would cost the name. */
+/* Two lines are fine */
 .sweep-name {
   font-size: 12px;
   font-weight: 500;

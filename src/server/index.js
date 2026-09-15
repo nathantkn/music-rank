@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express'
-import db from './db.js';
+import db, { isConnectionError, pingDatabase } from './db.js';
+import { DATABASE_UNAVAILABLE } from '../shared/apiErrors.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -520,6 +521,24 @@ app.get('/api/artists/:id', async (req, res, next) => {
   }
 });
 
+// 8) HEALTH
+// The client's error screen polls this to find out when the database has woken
+// back up, so it has to touch the database rather than just return 200 for a
+// live process.
+app.get('/api/health', async (req, res) => {
+  try {
+    await pingDatabase();
+    res.json({ status: 'ok', database: 'up' });
+  } catch (err) {
+    res.status(503).json({
+      status: 'error',
+      database: 'down',
+      code: DATABASE_UNAVAILABLE,
+      error: err.message,
+    });
+  }
+});
+
 // Serve static files from the React app (production)
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../../dist');
@@ -532,8 +551,21 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Global error handler
+//
+// A database we can't reach isn't a 500 — nothing is wrong with the request and
+// trying again later is the right move, which is what 503 says. The client keys
+// its "database is asleep" screen off the code rather than the status so an
+// unrelated 503 from a proxy doesn't get mistaken for one.
 app.use((err, req, res, next) => {
   console.error(`${req.method} ${req.originalUrl} failed:`, err);
+
+  if (isConnectionError(err)) {
+    return res.status(503).json({
+      error: 'The database is unavailable. It may be paused after a period of inactivity.',
+      code: DATABASE_UNAVAILABLE,
+    });
+  }
+
   res.status(err.status || 500).json({ error: err.message });
 });
 

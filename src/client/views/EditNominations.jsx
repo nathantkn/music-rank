@@ -4,6 +4,7 @@ import '../styles/EditNominations.css'
 import Breadcrumb from '../components/Breadcrumb'
 import { getAlbumImage, getArtistsString } from '../lib/nominations'
 import { useToast } from '../components/Toast'
+import { apiFetch } from '../lib/api'
 import { invalidateAll } from '../lib/queryClient'
 
 const LONG_PRESS_MS = 280
@@ -39,13 +40,13 @@ export default function EditNominations() {
                 setLoading(true)
 
                 // Fetch cycle info
-                const cyclesRes = await fetch('/api/cycles')
+                const cyclesRes = await apiFetch('/api/cycles')
                 const cycles = await cyclesRes.json()
                 const currentCycle = cycles.find(c => c.id.toString() === cycleId)
                 setCycle(currentCycle)
 
                 // Fetch nominations
-                const nominationsRes = await fetch(`/api/cycles/${cycleId}/nominations`)
+                const nominationsRes = await apiFetch(`/api/cycles/${cycleId}/nominations`)
                 const nominationsData = await nominationsRes.json()
 
                 // Ranked rows first in rank order, then the unranked ones as they came back
@@ -57,7 +58,7 @@ export default function EditNominations() {
 
                 // Fetch current stats to get the existing best new artist
                 try {
-                    const statsRes = await fetch(`/api/cycles/${cycleId}/stats`)
+                    const statsRes = await apiFetch(`/api/cycles/${cycleId}/stats`)
                     if (statsRes.ok) {
                         const statsData = await statsRes.json()
                         if (statsData?.bestNewArtist?.id != null) {
@@ -201,7 +202,7 @@ export default function EditNominations() {
         const title = nomination.track?.title || 'That nomination'
 
         try {
-            const res = await fetch(`/api/nominations/${nomination.id}`, { method: 'DELETE' })
+            const res = await apiFetch(`/api/nominations/${nomination.id}`, { method: 'DELETE' })
             if (!res.ok) throw new Error(await res.text())
 
             setOrder(list => list.filter(nom => nom.id !== nomination.id))
@@ -221,14 +222,14 @@ export default function EditNominations() {
 
         try {
             await Promise.all(order.map((nomination, index) =>
-                fetch(`/api/nominations/${nomination.id}`, {
+                apiFetch(`/api/nominations/${nomination.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ rank: index + 1 })
                 })
             ))
 
-            const statsResponse = await fetch(`/api/cycles/${cycleId}/stats`, {
+            const statsResponse = await apiFetch(`/api/cycles/${cycleId}/stats`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

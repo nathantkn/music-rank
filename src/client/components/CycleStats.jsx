@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import '../styles/CycleStats.css'
 import { getAlbumImage } from '../lib/nominations'
-import { highlightsQuery } from '../lib/api'
+import { apiFetch, highlightsQuery } from '../lib/api'
 import { ordinal } from '../lib/format'
 import { invalidateAll } from '../lib/queryClient'
 
@@ -85,7 +85,7 @@ export default function CycleStats({ cycleId }) {
 
         setLoading(true)
 
-        fetch(`/api/cycles/${cycleId}/stats`)
+        apiFetch(`/api/cycles/${cycleId}/stats`)
             .then(async (res) => {
                 if (res.status === 404) {
                     // No stats computed yet
@@ -108,7 +108,7 @@ export default function CycleStats({ cycleId }) {
         try {
             setLoading(true)
             setError(null)
-            const res = await fetch(`/api/cycles/${cycleId}/stats`, {
+            const res = await apiFetch(`/api/cycles/${cycleId}/stats`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ bestNewArtistId: stats?.bestNewArtist?.id || null})
@@ -116,7 +116,7 @@ export default function CycleStats({ cycleId }) {
 
             if (res.ok) {
                 // Refetch the stats after computing
-                const statsRes = await fetch(`/api/cycles/${cycleId}/stats`)
+                const statsRes = await apiFetch(`/api/cycles/${cycleId}/stats`)
                 if (statsRes.ok) {
                     const data = await statsRes.json()
                     setStats(data)

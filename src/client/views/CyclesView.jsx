@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import '../styles/CyclesView.css'
 import { getArtistsString, getAlbumImage } from '../lib/nominations'
-import { cyclesQuery, statsQuery } from '../lib/api'
+import { apiFetch, cyclesQuery, statsQuery } from '../lib/api'
 import { invalidateAll } from '../lib/queryClient'
 
 export default function CyclesView() {
@@ -37,7 +37,7 @@ export default function CyclesView() {
 
   const createCycle = useMutation({
     mutationFn: async (name) => {
-      const res = await fetch('/api/cycles', {
+      const res = await apiFetch('/api/cycles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })

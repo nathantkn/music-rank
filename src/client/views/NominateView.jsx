@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../styles/NominateView.css'
 import { useToast } from '../components/Toast'
+import { apiFetch } from '../lib/api'
 import { invalidateAll } from '../lib/queryClient'
 
 // "7 Jun 2024" — falls back to whatever the API gave us
@@ -46,7 +47,7 @@ export default function NominateView() {
 
   // Fetch all cycles
   useEffect(() => {
-    fetch('/api/cycles')
+    apiFetch('/api/cycles')
       .then(r => r.json())
       .then(setCycles)
       .catch(console.error)
@@ -62,7 +63,7 @@ export default function NominateView() {
   useEffect(() => {
     if (!activeCycle) return
 
-    fetch(`/api/cycles/${activeCycle.id}/nominations`)
+    apiFetch(`/api/cycles/${activeCycle.id}/nominations`)
       .then(r => r.json())
       .then(nominations => {
         setNominatedTracks(prev => {
@@ -89,7 +90,7 @@ export default function NominateView() {
 
     try {
       const endpoint = searchMode === 'albums' ? '/api/search/album' : '/api/search'
-      const response = await fetch(
+      const response = await apiFetch(
         `${endpoint}?q=${encodeURIComponent(searchQuery)}`
       )
       if (!response.ok) throw new Error(await readError(response, 'Search error'))
@@ -129,7 +130,7 @@ export default function NominateView() {
   const fetchAlbumTracks = async (album) => {
     setIsLoadingAlbum(true)
     try {
-      const response = await fetch(`/api/search/album/${album.id}`)
+      const response = await apiFetch(`/api/search/album/${album.id}`)
       if (!response.ok) throw new Error(await readError(response, 'Album fetch error'))
       const data = await response.json()
 
@@ -170,7 +171,7 @@ export default function NominateView() {
     }
 
     try {
-      const res = await fetch('/api/nominations', {
+      const res = await apiFetch('/api/nominations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

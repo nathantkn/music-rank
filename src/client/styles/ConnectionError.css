@@ -1,0 +1,75 @@
+/* Full-page state shown when the API can't reach the database. */
+
+.conn-error {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px var(--gutter);
+}
+
+.conn-error-card {
+  max-width: 520px;
+  padding: 36px;
+  border-radius: var(--r-card);
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  text-align: center;
+}
+
+.conn-error-eyebrow {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--warn);
+  padding: 5px 10px;
+  border-radius: var(--r-chip);
+  border: 1px solid var(--warn-border);
+  margin-bottom: 18px;
+}
+
+.conn-error-title {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+}
+
+.conn-error-body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-3);
+}
+
+.conn-error-actions {
+  margin-top: 26px;
+}
+
+.conn-error-retry {
+  font: inherit;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--r-control);
+  padding: 12px 22px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.conn-error-retry:hover:not(:disabled) {
+  background: var(--accent-hi);
+}
+
+.conn-error-retry:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.conn-error-note {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-4);
+}

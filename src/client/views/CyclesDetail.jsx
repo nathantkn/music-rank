@@ -5,6 +5,7 @@ import { rankedOf, unrankedOf } from '../lib/nominations'
 import Breadcrumb from '../components/Breadcrumb'
 import '../styles/CyclesDetail.css'
 import CycleStats from '../components/CycleStats'
+import { apiFetch } from '../lib/api'
 import { invalidateAll } from '../lib/queryClient'
 
 export default function CyclesDetail() {
@@ -33,7 +34,7 @@ export default function CyclesDetail() {
         setLoading(true)
         setNominationsLoading(true)
         setNominations([])
-        fetch(`/api/cycles`)
+        apiFetch(`/api/cycles`)
             .then(r => r.json())
             .then(cycles => {
                 const cycle = cycles.find(c => c.id.toString() === cycleId)
@@ -56,7 +57,7 @@ export default function CyclesDetail() {
     useEffect(() => {
         if (!selectedCycle) return
 
-        fetch(`/api/cycles/${selectedCycle.id}/nominations`)
+        apiFetch(`/api/cycles/${selectedCycle.id}/nominations`)
             .then(r => r.json())
             .then(setNominations)
             .catch(console.error)
@@ -66,7 +67,7 @@ export default function CyclesDetail() {
     // Make cycle active
     const makeActive = async () => {
         try {
-            const res = await fetch(`/api/cycles/${selectedCycle.id}`, {
+            const res = await apiFetch(`/api/cycles/${selectedCycle.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -103,7 +104,7 @@ export default function CyclesDetail() {
         }
 
         try {
-            const res = await fetch(`/api/cycles/${selectedCycle.id}`, {
+            const res = await apiFetch(`/api/cycles/${selectedCycle.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -164,9 +165,6 @@ export default function CyclesDetail() {
         return <div className="detail-state">Loading cycle…</div>
     }
 
-    const rankedCount = rankedOf(nominations).length
-    const unrankedCount = unrankedOf(nominations).length
-
     return (
         <>
             <Breadcrumb cycleId={selectedCycle.id} cycleName={selectedCycle.name} />
@@ -202,7 +200,6 @@ export default function CyclesDetail() {
                         </div>
                         <p className="detail-counts">
                             {nominations.length} {nominations.length === 1 ? 'nomination' : 'nominations'}
-                            {' · '}{rankedCount} ranked{' · '}{unrankedCount} unranked
                         </p>
                     </div>
 
