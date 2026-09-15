@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { bigThreeSweepQuery } from '../lib/api.js';
 import { initial } from '../lib/artists.js';
@@ -28,7 +29,11 @@ function SweepMember({ artist }) {
                 </div>
             </div>
 
-            <h3 className="sweep-name">{artist.subjectName}</h3>
+            <h3 className="sweep-name">
+                <Link className="artist-link" to={`/artists/${artist.subjectId}`}>
+                    {artist.subjectName}
+                </Link>
+            </h3>
             <p className="sweep-when">{cycle}</p>
         </article>
     );

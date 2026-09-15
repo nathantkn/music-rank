@@ -544,6 +544,15 @@ if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../../dist');
   app.use(express.static(distPath));
   
+  // An /api path that reached this far doesn't exist, and answering it with the
+  // SPA shell makes a missing endpoint look like a success: a caller gets 200
+  // and a page of HTML instead of an error it can act on. The keep-warm
+  // scheduler hitting /api/health is exactly that case — it would report green
+  // forever against a route that had been renamed.
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: `No such endpoint: ${req.method} ${req.originalUrl}` });
+  });
+
   // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
