@@ -60,9 +60,6 @@ export default function StatsPage() {
     return (
         <section className="stats-page">
             <h1 className="page-title">Records</h1>
-            <p className="page-sub stats-sub">
-                All-time leaderboards, for the all-time greats.
-            </p>
 
             <BigThreeSweep />
 

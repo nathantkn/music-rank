@@ -21,13 +21,6 @@
   padding: 36px var(--gutter) 80px;
 }
 
-/* Scoped rather than bare .stats-sub so it outranks .page-sub's gray on
-   specificity instead of on bundle order. */
-.stats-page .stats-sub {
-  color: var(--gold-mute);
-  margin-bottom: 28px;
-}
-
 .stats-list {
   display: flex;
   flex-direction: column;

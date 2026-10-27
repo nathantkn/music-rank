@@ -36,6 +36,7 @@ prisma/*.db-journal
 
 /src/server/scripts/client_secret.json
 /src/server/scripts/quickstart.js
+/src/server/scripts/refreshArtistImage.js
 
 /design
 

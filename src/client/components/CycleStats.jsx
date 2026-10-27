@@ -137,7 +137,7 @@ export default function CycleStats({ cycleId }) {
     if (loading) {
         return (
             <div className="awards-strip">
-                <span className="awards-computed">Computing cycle statistics…</span>
+                <span className="awards-computed">Retrieving cycle awards...</span>
             </div>
         )
     }
@@ -147,7 +147,7 @@ export default function CycleStats({ cycleId }) {
         return (
             <div className="awards-strip">
                 <span className="awards-computed">
-                    {error || 'No awards computed for this cycle yet.'}
+                    {error || 'No awards for this cycle yet.'}
                 </span>
                 <button className="btn-outline" onClick={computeStats}>
                     Compute stats
@@ -190,7 +190,7 @@ export default function CycleStats({ cycleId }) {
 
             <div className="awards-strip">
                 <span className="awards-computed">
-                    {error || (computedAt ? `Awards computed ${computedAt}` : 'Awards computed')}
+                    {error || (computedAt ? `Awards date: ${computedAt}` : 'Awards finished')}
                 </span>
                 <button className="btn-outline" onClick={computeStats}>
                     Recompute

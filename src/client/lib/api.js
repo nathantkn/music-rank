@@ -120,9 +120,10 @@ export const artistQuery = (artistId) => ({
   enabled: artistId != null,
 })
 
-export const bigThreeSweepQuery = () => ({
-  queryKey: ['achievements', 'big-three-sweep'],
-  queryFn: () => getJson('/api/achievements/big-three-sweep'),
+// Both walls come from one query: { sweep, completed }.
+export const bigThreeQuery = () => ({
+  queryKey: ['achievements', 'big-three'],
+  queryFn: () => getJson('/api/achievements/big-three'),
 })
 
 // One entry per board, keyed by metric. The Records page mounts nine of these

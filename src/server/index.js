@@ -35,7 +35,7 @@ import {
   computeArtistsWithMostCycleAppearances,
   computeArtistsWithLongestCycleStreak,
   computeAlbumsWithMostTrackOfCycle,
-  computeBigThreeSweepArtists
+  computeBigThreeArtists
 } from './services/leaderboardService.js';
 
 const app = express();
@@ -481,9 +481,9 @@ app.get('/api/leaderboards/album-track-of-cycle', async (req, res, next) => {
 // Not a ranking — a roll of everyone who has cleared the bar, so it gets its
 // own route family rather than pretending to be a leaderboard.
 
-app.get('/api/achievements/big-three-sweep', async (req, res, next) => {
+app.get('/api/achievements/big-three', async (req, res, next) => {
   try {
-    const data = await computeBigThreeSweepArtists(20);
+    const data = await computeBigThreeArtists(20);
     res.json(data);
   } catch (err) {
     next(err);

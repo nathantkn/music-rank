@@ -1,5 +1,5 @@
 // One-off backfill: make sure every past cycle has a StatsSnapshot, so the
-// all-time boards and the Big Three Sweep achievement see the full history
+// all-time boards and the Big Three achievements see the full history
 // instead of only the cycles that happened to be recomputed through the UI.
 //
 //   node src/server/scripts/backfillStatsSnapshots.js            # dry run
@@ -9,12 +9,12 @@
 // this script only ever carries an existing value forward — it never clears one
 // and never invents one. Cycles still missing a Best New Artist are listed at
 // the end; they have to be set by hand on the cycle page before their artist
-// can complete a sweep.
+// can complete the Big Three.
 
 import 'dotenv/config';
 import db from '../db.js';
 import { computeStatsForCycle, recomputeStatsForCycle } from '../services/statsService.js';
-import { computeBigThreeSweepArtists } from '../services/leaderboardService.js';
+import { computeBigThreeArtists } from '../services/leaderboardService.js';
 
 const apply = process.argv.includes('--apply');
 
@@ -89,14 +89,20 @@ async function backfill() {
     );
   }
 
-  const sweep = await computeBigThreeSweepArtists();
-  console.log(`\n🏆 Big Three Sweep ${apply ? 'now' : '(unchanged by a dry run)'}: ${sweep.length} artist(s)`);
-  for (const artist of sweep) {
-    console.log(
-      `    ${artist.subjectName} — TOC ×${artist.trackOfCycleWins}, ` +
-      `AOC ×${artist.artistOfCycleWins}, BNA ×${artist.bestNewArtistWins} ` +
-      `(completed in ${artist.sweptAtCycleName || `Cycle ${artist.sweptAtCycleId}`})`
-    );
+  const bigThree = await computeBigThreeArtists();
+  const groups = [
+    ['Big Three Sweep', bigThree.sweep, 'swept in'],
+    ['Big Three Completed', bigThree.completed, 'completed in']
+  ];
+  for (const [label, artists, verb] of groups) {
+    console.log(`\n🏆 ${label} ${apply ? 'now' : '(unchanged by a dry run)'}: ${artists.length} artist(s)`);
+    for (const artist of artists) {
+      console.log(
+        `    ${artist.subjectName} — TOC ×${artist.trackOfCycleWins}, ` +
+        `AOC ×${artist.artistOfCycleWins}, BNA ×${artist.bestNewArtistWins} ` +
+        `(${verb} ${artist.achievedAtCycleName || `Cycle ${artist.achievedAtCycleId}`})`
+      );
+    }
   }
 
   if (!apply) {

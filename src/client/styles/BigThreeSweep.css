@@ -1,6 +1,10 @@
-/* Big Three Sweep — a wall of faces, not a ranked board. Membership is the whole
+/* Big Three — walls of faces, not ranked boards. Membership is the whole
    statement, so no counts, no ordering cues, no per-award badges: just everyone
-   who has taken all three, earliest first. */
+   who has taken all three, earliest first.
+   Two walls share these rules. .sweep--sweep (all three in one cycle) is the
+   headline: glowing portraits, a gold-edged panel, more light. .sweep--completed
+   (all three across cycles) keeps the gold bezel but drops the glow and sits
+   on a flat panel. */
 
 .sweep {
   margin-bottom: 32px;
@@ -119,4 +123,93 @@
   border: 1px solid #2A2A22;
   border-radius: 18px;
   background: #0F1520;
+}
+
+/* ── Sweep: the headline wall ─────────────────────────────────────────── */
+/* Same portrait size as the completed wall — the glow, the gold-edged panel
+   and the type carry the distinction, not the scale. */
+
+.sweep--sweep {
+  margin-bottom: 40px;
+}
+
+.sweep--sweep .sweep-title {
+  font-size: 20px;
+  color: var(--gold);
+  text-shadow: 0 0 24px rgba(235, 208, 138, 0.28);
+}
+
+/* Six across for now — each wall currently holds six artists, so both read as
+   a single row. Revisit (or drop back to auto-fill) once either wall grows. */
+.sweep--sweep .sweep-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  padding: 34px 26px;
+  border-color: var(--gold-border);
+  background:
+    radial-gradient(120% 160% at 50% -30%, rgba(224, 186, 106, 0.22) 0%, rgba(224, 186, 106, 0) 66%),
+    #11141B;
+  box-shadow:
+    0 0 0 1px rgba(235, 208, 138, 0.06) inset,
+    0 12px 40px rgba(201, 154, 59, 0.10);
+}
+
+.sweep--sweep .sweep-art {
+  width: 62px;
+  height: 62px;
+  padding: 2px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5) inset,
+    0 0 18px rgba(235, 208, 138, 0.34),
+    0 6px 16px rgba(201, 154, 59, 0.22);
+}
+
+.sweep--sweep .sweep-initial {
+  font-size: 17px;
+}
+
+.sweep--sweep .sweep-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+/* ── Completed: the quieter wall beneath ──────────────────────────────── */
+
+.sweep--completed .sweep-title {
+  font-size: 16px;
+}
+
+.sweep--completed .sweep-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 20px 12px;
+  padding: 22px 18px;
+  background: #0F1520;
+}
+
+/* Same gold bezel as the sweep, but no glow — only the inset edge. */
+.sweep--completed .sweep-art {
+  width: 62px;
+  height: 62px;
+  padding: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5) inset;
+}
+
+.sweep--completed .sweep-initial {
+  font-size: 17px;
+}
+
+.sweep--completed .sweep-name {
+  font-size: 11px;
+}
+
+/* Six fixed columns would crush the portraits below the page's narrow
+   breakpoint, so let the walls wrap again there. */
+@media (max-width: 760px) {
+  .sweep--sweep .sweep-grid {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  }
+
+  .sweep--completed .sweep-grid {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  }
 }

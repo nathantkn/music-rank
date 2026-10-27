@@ -229,11 +229,15 @@ export async function computeArtistsWithLongestCycleStreak(limit = 20) {
   }));
 }
 
-// The Big Three Sweep: artists who have won Track of the Cycle, Artist of the
-// Cycle and Best New Artist at some point — not necessarily in the same cycle.
-// Track of the Cycle is credited to every artist on the winning track, so a
-// feature counts the same as a lead credit, matching the track-of-cycle board.
-export async function computeBigThreeSweepArtists(limit = 20) {
+// The Big Three: artists who have won Track of the Cycle, Artist of the Cycle
+// and Best New Artist. Holders split into two exclusive groups:
+//   - sweep:     took all three in one and the same cycle
+//   - completed: collected all three, but across different cycles
+// A sweep outranks a completion, so an artist who has done both is listed only
+// under sweep. Track of the Cycle is credited to every artist on the winning
+// track, so a feature counts the same as a lead credit, matching the
+// track-of-cycle board.
+export async function computeBigThreeArtists(limit = 20) {
   const results = await db.$queryRaw`
     WITH toc AS (
       SELECT
@@ -263,10 +267,27 @@ export async function computeBigThreeSweepArtists(limit = 20) {
       WHERE s."bestNewArtistId" IS NOT NULL
       GROUP BY s."bestNewArtistId"
     ),
+    -- A single snapshot where the same artist is Artist of the Cycle, Best New
+    -- Artist and credited on Track of the Cycle. The first such cycle is the
+    -- one the sweep is remembered by.
+    same_cycle AS (
+      SELECT
+          s."artistOfCycleId"           AS "artistId",
+          MIN(s."cycleId")              AS "firstCycleId"
+      FROM "StatsSnapshot" s
+      WHERE s."artistOfCycleId" = s."bestNewArtistId"
+        AND EXISTS (
+          SELECT 1
+          FROM "TrackToArtist" tta
+          WHERE tta."trackId"  = s."trackOfCycleId"
+            AND tta."artistId" = s."artistOfCycleId"
+        )
+      GROUP BY s."artistOfCycleId"
+    ),
     -- The inner joins are the achievement: an artist missing any one of the
-    -- three drops out entirely. The sweep completes on the later of the three
-    -- first wins, so GREATEST of those is the cycle that finished the set.
-    sweeps AS (
+    -- three drops out entirely. A cross-cycle set completes on the later of
+    -- the three first wins, so GREATEST of those is the cycle that finished it.
+    holders AS (
       SELECT
           a.id            AS "subjectId",
           a."name"        AS "subjectName",
@@ -274,28 +295,37 @@ export async function computeBigThreeSweepArtists(limit = 20) {
           toc."wins"      AS "trackOfCycleWins",
           aoc."wins"      AS "artistOfCycleWins",
           bna."wins"      AS "bestNewArtistWins",
-          GREATEST(toc."firstCycleId", aoc."firstCycleId", bna."firstCycleId") AS "sweptAtCycleId"
+          sc."firstCycleId" IS NOT NULL AS "isSweep",
+          COALESCE(
+            sc."firstCycleId",
+            GREATEST(toc."firstCycleId", aoc."firstCycleId", bna."firstCycleId")
+          )               AS "achievedAtCycleId"
       FROM "Artist" a
       JOIN toc            ON toc."artistId" = a.id
       JOIN aoc            ON aoc."artistId" = a.id
       JOIN bna            ON bna."artistId" = a.id
+      LEFT JOIN same_cycle sc ON sc."artistId" = a.id
     )
     SELECT
-        sw.*,
-        c."name"          AS "sweptAtCycleName"
-    FROM sweeps sw
-    LEFT JOIN "Cycle" c   ON c.id = sw."sweptAtCycleId"
-    ORDER BY sw."sweptAtCycleId" ASC, sw."subjectName" ASC
-    LIMIT ${limit};
+        h.*,
+        c."name"          AS "achievedAtCycleName"
+    FROM holders h
+    LEFT JOIN "Cycle" c   ON c.id = h."achievedAtCycleId"
+    ORDER BY h."achievedAtCycleId" ASC, h."subjectName" ASC;
   `;
 
-  return results.map(row => ({
+  const rows = results.map(row => ({
     ...row,
     trackOfCycleWins: Number(row.trackOfCycleWins),
     artistOfCycleWins: Number(row.artistOfCycleWins),
     bestNewArtistWins: Number(row.bestNewArtistWins),
-    sweptAtCycleId: Number(row.sweptAtCycleId)
+    achievedAtCycleId: Number(row.achievedAtCycleId)
   }));
+
+  return {
+    sweep: rows.filter(row => row.isSweep).slice(0, limit),
+    completed: rows.filter(row => !row.isSweep).slice(0, limit)
+  };
 }
 
 export async function computeAlbumsWithMostTrackOfCycle(limit = 20) {

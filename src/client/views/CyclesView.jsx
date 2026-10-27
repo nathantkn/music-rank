@@ -176,7 +176,7 @@ export default function CyclesView() {
                     <div className="archive-track">
                       <div className="archive-title">{track?.title || 'No stats yet'}</div>
                       <div className="archive-artist">
-                        {track ? getArtistsString(track) : 'Nothing computed for this cycle'}
+                        {track ? getArtistsString(track) : 'Nothing awarded for this cycle'}
                       </div>
                     </div>
                   </div>
